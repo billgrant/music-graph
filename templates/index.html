@@ -1,16 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Music Genre Graph</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- Add Vis.js library from CDN -->
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 </head>
+
 <body>
     <div class="container">
         <h1>Music Genre Graph</h1>
         <p class="subtitle">Exploring connections between genres and bands</p>
-        
+
+        <!-- This is the container where the graph will render -->
+        <div id="network-graph"></div>
+
+        <!-- Keep the lists below for reference -->
         <div class="section">
             <h2>Genres</h2>
             <div class="genre-list">
@@ -20,7 +28,7 @@
                     <p class="connections">
                         <strong>Connections:</strong>
                         {% for connection in genre_data.connections %}
-                            {{ genres[connection].name }}{% if not loop.last %}, {% endif %}
+                        {{ genres[connection].name }}{% if not loop.last %}, {% endif %}
                         {% endfor %}
                     </p>
                 </div>
@@ -37,7 +45,7 @@
                     <p class="genres">
                         <strong>Genres:</strong>
                         {% for genre in band_data.genres %}
-                            {{ genres[genre].name }}{% if not loop.last %}, {% endif %}
+                        {{ genres[genre].name }}{% if not loop.last %}, {% endif %}
                         {% endfor %}
                     </p>
                 </div>
@@ -45,5 +53,67 @@
             </div>
         </div>
     </div>
+
+    <!-- JavaScript to create the graph -->
+    <script type="text/javascript">
+        // Convert Python data to JavaScript format
+        // This is like your network device inventory
+        var nodes = new vis.DataSet([
+            {% for genre_id, genre_data in genres.items() %}
+        {
+            id: '{{ genre_id }}',
+                label: '{{ genre_data.name }}',
+                    shape: 'circle',
+                        color: '#4CAF50'
+        } {% if not loop.last %}, {% endif %}
+        {% endfor %}
+        ]);
+
+        var edges = new vis.DataSet([
+            {% for from_id, to_id in connections %}
+        { from: '{{ from_id }}', to: '{{ to_id }}' } {% if not loop.last %}, {% endif %}
+        {% endfor %}
+]);
+        // Container element
+        var container = document.getElementById('network-graph');
+
+        // Graph data
+        var data = {
+            nodes: nodes,
+            edges: edges
+        };
+
+        // Configuration options (like your network diagram layout settings)
+        var options = {
+            nodes: {
+                font: {
+                    size: 16,
+                    color: '#ffffff'
+                },
+                borderWidth: 2,
+                borderWidthSelected: 4
+            },
+            edges: {
+                width: 2,
+                color: {
+                    color: '#848484',
+                    highlight: '#4CAF50'
+                },
+                smooth: {
+                    type: 'continuous'
+                }
+            },
+            physics: {
+                enabled: true,
+                stabilization: {
+                    iterations: 200
+                }
+            }
+        };
+
+        // Create the network (this is like rendering your network topology)
+        var network = new vis.Network(container, data, options);
+    </script>
 </body>
+
 </html>

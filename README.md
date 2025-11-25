@@ -6,15 +6,22 @@ An interactive web application that visualizes music genres and bands as a conne
 
 Create a visual map showing how music genres relate to each other and which bands belong to which genres. Users can explore genre relationships and discover bands within each style of music.
 
-## Current Phase: Phase 1 - Basic Flask Application
+## Current Phase: Phase 1 - Basic Flask Application (In Progress)
 
 Building a simple proof of concept with hardcoded data and basic visualization.
 
+### Phase 1 Progress
+✅ Flask project structure created
+✅ Data structures defined (genres and bands dictionaries)
+✅ Basic routes and templates working
+✅ Card-based display of genres and bands
+⬜ Graph visualization (next step)
+
 ### Phase 1 Goals
-- Set up Flask project structure
-- Create simple routes
-- Render hardcoded genre/band data from Python dictionaries
-- Display a basic graph visualization showing genres and bands
+- ~~Set up Flask project structure~~
+- ~~Create simple routes~~
+- ~~Render hardcoded genre/band data from Python dictionaries~~
+- Display a basic graph visualization showing genres and bands (in progress)
 
 ## Data Structure (Phase 1)
 
@@ -186,14 +193,53 @@ Corpse
 
 ## Getting Started
 
-*(To be filled in once project structure is created)*
+### Prerequisites
+- Python 3.12+
+- uv (package manager)
+
+### Local Development Setup
+
+1. Clone the repository:
+```bash
+git clone https://github.com/billgrant/music-graph.git
+cd music-graph
+```
+
+2. Create virtual environment and install dependencies:
+```bash
+uv venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+uv pip install flask
+```
+
+3. Run the application:
+```bash
+python app.py
+```
+
+4. Visit `http://localhost:5000` in your browser
+
+### Project Structure
+```
+music-graph/
+├── app.py              # Flask application entry point
+├── data.py             # Genre and band data structures
+├── templates/          # Jinja2 HTML templates
+│   └── index.html      # Main page template
+├── static/             # CSS, JS, images
+│   └── style.css       # Dark theme styling
+└── README.md
+```
 
 ## Blog
 
 This project is documented on my blog at [billgrant.io](https://billgrant.io).
 
-- [Project Introduction](https://billgrant.io) - Overview and roadmap
-- *(Future posts will be linked here)*
+**Project Posts:**
+- [Project Introduction](https://billgrant.io/2025/11/24/music-graph-intro/) - Overview and roadmap
+- [Getting Flask Running](https://billgrant.io/2025/11/24/flask-setup-post/) - Phase 1 initial setup
+
+Posts are tagged with [#music-graph](https://billgrant.io/tags/#music-graph).
 
 ## License
 
