@@ -56,9 +56,8 @@
 
     <!-- JavaScript to create the graph -->
     <script type="text/javascript">
-        // Convert Python data to JavaScript format
-        // This is like your network device inventory
-        // Genre nodes (the circles)
+
+        // Genre and band nodes
         var nodes = new vis.DataSet([
             // Add genres
             {% for genre_id, genre_data in genres.items() %}
@@ -70,10 +69,11 @@
                             font: {
                 size: 16,
                     color: '#ffffff'
-            }
+            },
+            group: 'genre'  // Add group for easier filtering
         },
         {% endfor %}
-        // Add bands
+        // Add bands (hidden by default)
         {% for band_id, band_data in bands.items() %}
         {
             id: '{{ band_id }}',
@@ -82,21 +82,24 @@
                         font: {
                 color: '#ffffff',
                     size: 14
-            }
+            },
+            hidden: true,  // Hide bands by default
+                group: 'band',  // Add group for easier filtering
+                    parentGenre: '{{ band_data.primary_genre }}'  // Track which genre this band belongs to
         } {% if not loop.last %}, {% endif %}
         {% endfor %}
 ]);
 
-// Connections between genres and from bands to genres
-var edges = new vis.DataSet([
-    // Genre to genre connections
-    {% for from_id, to_id in connections %}
-    {from: '{{ from_id }}', to: '{{ to_id }}'},
-    {% endfor %}
-    // Band to genre connections (primary only)
-    {% for band_id, band_data in bands.items() %}
-    {from: '{{ band_id }}', to: '{{ band_data.primary_genre }}'}{% if not loop.last %},{% endif %}
-    {% endfor %}
+        // Connections between genres and from bands to genres
+        var edges = new vis.DataSet([
+            // Genre to genre connections
+            {% for from_id, to_id in connections %}
+        { from: '{{ from_id }}', to: '{{ to_id }}' },
+        {% endfor %}
+        // Band to genre connections (primary only)
+        {% for band_id, band_data in bands.items() %}
+        { from: '{{ band_id }}', to: '{{ band_data.primary_genre }}' } {% if not loop.last %}, {% endif %}
+        {% endfor %}
 ]);
         // Container element
         var container = document.getElementById('network-graph');
@@ -137,6 +140,61 @@ var edges = new vis.DataSet([
 
         // Create the network (this is like rendering your network topology)
         var network = new vis.Network(container, data, options);
+
+        // Track which genres are expanded
+        var expandedGenres = new Set();
+
+        // Add click event listener
+        network.on("click", function (params) {
+            if (params.nodes.length > 0) {
+                var clickedNodeId = params.nodes[0];
+                var clickedNode = nodes.get(clickedNodeId);
+
+                // Check if it's a genre (not a band)
+                if (clickedNode.group === 'genre') {
+                    toggleGenre(clickedNodeId);
+                } else if (clickedNode.group === 'band') {
+                    showBandDetails(clickedNodeId);
+                }
+            }
+        });
+
+        // Function to expand/collapse a genre
+        function toggleGenre(genreId) {
+            if (expandedGenres.has(genreId)) {
+                // Collapse: hide bands for this genre
+                expandedGenres.delete(genreId);
+                hideBandsForGenre(genreId);
+            } else {
+                // Expand: show bands for this genre
+                expandedGenres.add(genreId);
+                showBandsForGenre(genreId);
+            }
+        }
+
+        // Show all bands that belong to a genre
+        function showBandsForGenre(genreId) {
+            nodes.forEach(function (node) {
+                if (node.group === 'band' && node.parentGenre === genreId) {
+                    nodes.update({ id: node.id, hidden: false });
+                }
+            });
+        }
+
+        // Hide all bands that belong to a genre
+        function hideBandsForGenre(genreId) {
+            nodes.forEach(function (node) {
+                if (node.group === 'band' && node.parentGenre === genreId) {
+                    nodes.update({ id: node.id, hidden: true });
+                }
+            });
+        }
+
+        // Placeholder for band details (we'll implement this next)
+        function showBandDetails(bandId) {
+            console.log("Band clicked:", bandId);
+            // We'll add a modal/panel here next
+        }        
     </script>
 </body>
 
