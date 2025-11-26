@@ -6,25 +6,47 @@ An interactive web application that visualizes music genres and bands as a conne
 
 Create a visual map showing how music genres relate to each other and which bands belong to which genres. Users can explore genre relationships and discover bands within each style of music.
 
-## Current Phase: Phase 1 - Basic Flask Application (Nearly Complete)
+## Current Phase: Phase 2 - Database Integration (Starting)
 
-Building a simple proof of concept with hardcoded data and basic visualization.
+Moving from hardcoded dictionaries to a proper database for better data management.
 
-### Phase 1 Progress
-✅ Flask project structure created
-✅ Data structures defined (genres and bands dictionaries)
-✅ Basic routes and templates working
-✅ Card-based display of genres and bands
-✅ Graph visualization with Vis.js
-✅ Bands added as text nodes with primary genre connections
-⬜ Interactive expand/collapse functionality (Phase 1.5 - next)
+### Phase 1 Summary (Complete ✅)
+Phase 1 successfully built a working proof of concept:
+- Flask application with basic routing and templates
+- Graph visualization using Vis.js
+- Interactive expand/collapse functionality
+- Clean separation between genres (always visible) and bands (show on demand)
 
-### Phase 1 Goals
-- ~~Set up Flask project structure~~
-- ~~Create simple routes~~
-- ~~Render hardcoded genre/band data from Python dictionaries~~
-- ~~Display a basic graph visualization showing genres and bands~~
-- Add interactive expand/collapse functionality (in progress)
+### Phase 2 Goals
+- Design database schema for genres, bands, and relationships
+- Set up SQLite for local development
+- Migrate data from Python dictionaries to database
+- Update Flask routes to query database instead of hardcoded data
+- Create basic CRUD operations
+
+---
+
+## Completed Phases
+
+### Phase 1: Basic Flask Application ✅
+**Goal:** Build proof of concept with hardcoded data and graph visualization
+
+**Completed:**
+- ✅ Flask project structure created
+- ✅ Data structures defined (genres and bands dictionaries)
+- ✅ Basic routes and templates working
+- ✅ Card-based display of genres and bands
+- ✅ Graph visualization with Vis.js
+- ✅ Bands added as text nodes with primary genre connections
+- ✅ Interactive expand/collapse functionality
+
+**Blog Posts:**
+- [Getting Flask Running](https://billgrant.io/2025/11/24/flask-setup-post/)
+- [Visualizing Genre Connections](https://billgrant.io/2025/11/25/vis-js-blog-post/)
+- [Adding Bands to the Graph](https://billgrant.io/2025/11/26/bands-blog-post/)
+- [Interactive Expand/Collapse](https://billgrant.io/2025/11/26/phase-1-5-blog-post/)
+
+**Release:** [v0.0.4-alpha](https://github.com/billgrant/music-graph/releases/tag/v0.0.4-alpha)
 
 ## Data Structure (Phase 1)
 
@@ -238,13 +260,14 @@ music-graph/
 
 This project is documented on my blog at [billgrant.io](https://billgrant.io).
 
-**Project Posts:**
+**Phase 1 Posts:**
 - [Project Introduction](https://billgrant.io/2025/11/24/music-graph-intro/) - Overview and roadmap
-- [Getting Flask Running](https://billgrant.io/2025/11/24/flask-setup-post/) - Phase 1: Initial setup
-- [Visualizing Genre Connections](https://billgrant.io/2025/11/25/vis-js-blog-post/) - Phase 1: Graph visualization
-- [Adding Bands to the Graph](https://billgrant.io/2025/11/26/bands-blog-post/) - Phase 1: Band nodes
+- [Getting Flask Running](https://billgrant.io/2025/11/24/flask-setup-post/) - Initial setup
+- [Visualizing Genre Connections](https://billgrant.io/2025/11/25/vis-js-blog-post/) - Graph visualization
+- [Adding Bands to the Graph](https://billgrant.io/2025/11/26/bands-blog-post/) - Band nodes
+- [Interactive Expand/Collapse](https://billgrant.io/2025/11/26/phase-1-5-blog-post/) - Phase 1 complete
 
-Posts are tagged with [#music-graph](https://billgrant.io/tags/#music-graph).
+All posts are tagged with [#music-graph](https://billgrant.io/tags/#music-graph).
 
 ## Roadmap
 
