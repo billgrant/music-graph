@@ -8,7 +8,6 @@ def index():
     connections = get_unique_connections(genres)
     return render_template('index.html', genres=genres, bands=bands, connections=connections)
 
-
 def get_unique_connections(genres):
     """Get unique connections (avoid duplicates)"""
     connections = set()

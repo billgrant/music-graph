@@ -24,18 +24,22 @@ genres = {
 bands = {
     "pantera": {
         "name": "Pantera",
+        "primary_genre": "groove-metal",
         "genres": ["groove-metal", "thrash-metal"]
     },
     "death": {
         "name": "Death",
+        "primary_genre": "death-metal",
         "genres": ["death-metal"]        
     },
     "cannibalcorpse": {
         "name": "Cannibal Corpse",
+        "primary_genre": "death-metal",
         "genres": ["death-metal"]        
     },
     "anthrax": {
         "name": "Anthrax",
+        "primary_genre": "thrash-metal",
         "genres": ["thrash-metal"]        
     }    
 }

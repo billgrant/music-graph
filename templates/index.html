@@ -58,21 +58,45 @@
     <script type="text/javascript">
         // Convert Python data to JavaScript format
         // This is like your network device inventory
+        // Genre nodes (the circles)
         var nodes = new vis.DataSet([
+            // Add genres
             {% for genre_id, genre_data in genres.items() %}
         {
             id: '{{ genre_id }}',
                 label: '{{ genre_data.name }}',
                     shape: 'circle',
-                        color: '#4CAF50'
+                        color: '#4CAF50',
+                            font: {
+                size: 16,
+                    color: '#ffffff'
+            }
+        },
+        {% endfor %}
+        // Add bands
+        {% for band_id, band_data in bands.items() %}
+        {
+            id: '{{ band_id }}',
+                label: '{{ band_data.name }}',
+                    shape: 'text',
+                        font: {
+                color: '#ffffff',
+                    size: 14
+            }
         } {% if not loop.last %}, {% endif %}
         {% endfor %}
-        ]);
+]);
 
-        var edges = new vis.DataSet([
-            {% for from_id, to_id in connections %}
-        { from: '{{ from_id }}', to: '{{ to_id }}' } {% if not loop.last %}, {% endif %}
-        {% endfor %}
+// Connections between genres and from bands to genres
+var edges = new vis.DataSet([
+    // Genre to genre connections
+    {% for from_id, to_id in connections %}
+    {from: '{{ from_id }}', to: '{{ to_id }}'},
+    {% endfor %}
+    // Band to genre connections (primary only)
+    {% for band_id, band_data in bands.items() %}
+    {from: '{{ band_id }}', to: '{{ band_data.primary_genre }}'}{% if not loop.last %},{% endif %}
+    {% endfor %}
 ]);
         // Container element
         var container = document.getElementById('network-graph');
