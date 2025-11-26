@@ -1,3 +1,8 @@
+# DEPRECATED - This file is no longer used
+# Data is now stored in music_graph.db via SQLAlchemy models
+# See models.py and init_db.py
+# Kept for historical reference only
+
 genres = {
     "rock": {
         "name": "Rock",

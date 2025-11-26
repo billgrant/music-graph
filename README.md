@@ -6,23 +6,17 @@ An interactive web application that visualizes music genres and bands as a conne
 
 Create a visual map showing how music genres relate to each other and which bands belong to which genres. Users can explore genre relationships and discover bands within each style of music.
 
-## Current Phase: Phase 2 - Database Integration (Starting)
+## Current Phase: Phase 3 - CRUD Operations (Starting)
 
-Moving from hardcoded dictionaries to a proper database for better data management.
+Adding ability to create, read, update, and delete genres and bands through the web interface.
 
-### Phase 1 Summary (Complete ✅)
-Phase 1 successfully built a working proof of concept:
-- Flask application with basic routing and templates
-- Graph visualization using Vis.js
-- Interactive expand/collapse functionality
-- Clean separation between genres (always visible) and bands (show on demand)
-
-### Phase 2 Goals
-- Design database schema for genres, bands, and relationships
-- Set up SQLite for local development
-- Migrate data from Python dictionaries to database
-- Update Flask routes to query database instead of hardcoded data
-- Create basic CRUD operations
+### Phase 2 Summary (Complete ✅)
+Phase 2 successfully migrated from hardcoded dictionaries to a proper database:
+- SQLAlchemy ORM integrated with Flask
+- SQLite database with proper schema
+- Genre hierarchy implemented (parent/child relationships)
+- Band relationships (primary genre + full genre list)
+- All existing functionality preserved
 
 ---
 
@@ -48,173 +42,132 @@ Phase 1 successfully built a working proof of concept:
 
 **Release:** [v0.0.4-alpha](https://github.com/billgrant/music-graph/releases/tag/v0.0.4-alpha)
 
-## Data Structure (Phase 1)
+### Phase 2: Database Integration ✅
+**Goal:** Move from hardcoded dictionaries to proper database
 
-Using Python dictionaries to represent the initial data:
+**Completed:**
+- ✅ SQLAlchemy ORM integrated
+- ✅ Database models created (Genre, Band, relationships)
+- ✅ SQLite database configured
+- ✅ Genre hierarchy implemented (parent_id, type fields)
+- ✅ Data migration from dictionaries to database
+- ✅ Flask routes updated to query database
+- ✅ All existing functionality preserved
 
-### Genres
-```python
-genres = {
-    "rock": {
-        "name": "Rock",
-        "connections": ["metal", "punk"]
-    },
-    "metal": {
-        "name": "Metal", 
-        "connections": ["rock", "death-metal", "thrash-metal", "groove-metal"]
-    },
-    "death-metal": {
-        "name": "Death Metal",
-        "connections": ["metal"]
-    },
-    "groove-metal": {
-        "name": "Groove Metal",
-        "connections": ["metal"]
-    },
-    "thrash-metal": {
-        "name": "Thrash Metal",
-        "connections": ["metal"]
-    }
-}
-```
+**Blog Posts:**
+- [Database Integration](https://billgrant.io/2025/11/26/phase-2-blog-post/) *(coming soon)*
 
-**Design decisions:**
-- Using slugs (e.g., `"death-metal"`) as keys for easy lookups
-- Separate `name` field for proper display formatting
-- Bidirectional connections explicitly defined (if A connects to B, B also lists A)
-- Explicit connections prevent performance issues when rendering
+**Release:** [v0.1.0-alpha](https://github.com/billgrant/music-graph/releases/tag/v0.1.0-alpha) *(coming soon)*
 
-### Bands
-```python
-bands = {
-    "pantera": {
-        "name": "Pantera",
-        "genres": ["groove-metal", "thrash-metal"]
-    },
-    "death": {
-        "name": "Death",
-        "genres": ["death-metal"]        
-    },
-    "cannibalcorpse": {
-        "name": "Cannibal Corpse",
-        "genres": ["death-metal"]        
-    }
-}
-```
-
-**Design decisions:**
-- Bands can belong to multiple genres
-- Genre references use the same slug format as genre keys
-
-## Visualization Plan (Phase 1)
-
-**Layout:**
-- Genres displayed as circles/nodes
-- Lines connecting related genres
-- Band names displayed near their associated genre(s)
-
-**Multi-genre bands:**
-- For Phase 1: Display band name multiple times (once per genre)
-- Future phases: Show primary genre only in visualization, full details on click
-
-**Interaction:**
-- Phase 1: Static display, no interactivity
-- Future phases: Click to drill down, expand/collapse, detail views
-
-**Visual reference:**
-```
-     [Rock]
-      /  \
-     /    \
-[Death Metal]  [Groove Metal]
-    |  \           |
-Cannibal  Death   Pantera
-Corpse
-```
+---
 
 ## Technology Stack
 
-**Current (Phase 1):**
-- Python 3.x
-- Flask
-- HTML/CSS templates
-- JavaScript visualization library (TBD - researching D3.js, Cytoscape.js, vis.js)
+**Current:**
+- Python 3.12+
+- Flask web framework
+- SQLAlchemy ORM
+- SQLite database
+- Vis.js for graph visualization
+- HTML/CSS/JavaScript frontend
 
-**Future Phases:**
-- Database (SQLite → PostgreSQL)
-- User authentication
+**Future Additions:**
+- User authentication (Flask-Login or similar)
+- PostgreSQL (migration from SQLite)
 - Docker containerization
 - CI/CD with GitHub Actions
-- Homelab deployment
 - Monitoring (Grafana/ELK)
 - REST API
 
+---
+
 ## Roadmap
 
-### Phase 1: Basic Flask Application *(Current)*
-- Set up Flask project structure
-- Create simple routes
-- Render hardcoded genre/band data
-- Basic graph visualization
+### Phase 3: CRUD Operations (Next)
+**Goal:** Add ability to manage genres and bands through web interface
 
-### Phase 2: Database Integration
-- Design schema for genres, bands, relationships
-- Set up SQLite
-- Migrate from dictionary to database queries
-- Basic CRUD operations
+**Planned:**
+- Create forms for adding genres and bands
+- Implement edit and delete functionality
+- Add validation and error handling
+- Simple admin interface for data management
 
-### Phase 3: Graph Visualization Enhancement
-- Improve interactive graph display
-- Add zoom/pan functionality
-- Better styling and UX
+**Why:** Enable adding content without editing code or database directly
 
 ### Phase 4: User Authentication
-- Add user accounts
-- Login/logout functionality
-- Allow authenticated users to suggest additions
-- Moderation workflow
+**Goal:** Secure the application with user accounts
 
-### Phase 5: Containerization
-- Create Dockerfile
-- Set up docker-compose
-- Document containerized setup
+**Planned:**
+- User registration and login
+- Session management
+- Protect CRUD operations (must be logged in)
+- Basic authorization (who can edit what)
+- Consider role-based access (admin vs. contributor)
 
-### Phase 6: API Layer
-- Build REST API endpoints
-- API documentation
-- Versioning strategy
+**Why:** Prepare for multi-user access and prevent unauthorized changes
 
-### Phase 7: Homelab Deployment
+### Phase 5: Initial Deployment
+**Goal:** Deploy to server and make accessible
+
+**Planned:**
 - Deploy to homelab environment
 - Configure networking and reverse proxy
-- SSL certificates
+- Set up SSL certificates
+- Make accessible to first user (Aidan)
+- Basic production configuration
 
-### Phase 8: Monitoring
-- Grafana dashboards
-- ELK stack or similar logging
+**Why:** Move from local development to usable application
+
+### Phase 6: Dev/Test/Prod Environments
+**Goal:** Separate development from production to prevent breaking live application
+
+**Planned:**
+- Dev environment (local development)
+- Test/Staging environment (pre-production testing)
+- Prod environment (stable version for users)
+- Separate databases for each environment
+- Deployment workflow/pipeline
+- Database migration strategy
+
+**Why:** Once users are actively using the app, we need to develop new features without disrupting production
+
+### Phase 7: Monitoring and Observability
+**Goal:** Understand application health and usage
+
+**Planned:**
+- Grafana dashboards for application metrics
+- ELK stack or similar for logging
 - Application performance monitoring
-- Alerting
+- Alerting for issues
+- Usage analytics
 
-### Phase 9: CI/CD Pipeline
-- GitHub Actions automation
+**Why:** Know when things break and understand how the app is being used
+
+### Phase 8: CI/CD Pipeline
+**Goal:** Automate testing and deployment
+
+**Planned:**
+- GitHub Actions workflow
 - Automated testing
-- Deployment automation
+- Automated deployment to staging/production
 - Rollback strategies
+- Version tagging automation
 
-### Future Possibilities
-- Cloud migration (from homelab to CSP if needed)
-- Recommendation engine
-- Spotify integration
-- Advanced graph algorithms
-- Mobile-responsive improvements
-- Community features
+**Why:** Reduce manual deployment work and catch issues early
 
-## Development Approach
+### Future Enhancements
+- Recommendation engine ("If you like X, try Y")
+- Spotify integration for audio previews
+- Advanced graph algorithms (shortest path between genres)
+- Mobile-responsive design improvements
+- Community features (voting, discussions, comments)
+- Search and filtering
+- Band detail pages with more metadata
+- Cloud migration (if homelab proves insufficient)
+- API for external integrations
+- Template optimization (use SQLAlchemy objects directly vs. dict conversion)
 
-- **Small iterations:** Each phase is a manageable chunk
-- **Documentation:** Blog post per major milestone
-- **AI-assisted:** Using Claude and other AI tools as development partners
-- **Learning in public:** Documenting successes and failures
+---
 
 ## Getting Started
 
@@ -234,27 +187,53 @@ cd music-graph
 ```bash
 uv venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-uv pip install flask
+uv pip install flask flask-sqlalchemy
 ```
 
-3. Run the application:
+3. Initialize the database:
+```bash
+python init_db.py
+```
+
+This creates `music_graph.db` and loads initial data.
+
+4. Run the application:
 ```bash
 python app.py
 ```
 
-4. Visit `http://localhost:5000` in your browser
+5. Visit `http://localhost:5000` in your browser
 
 ### Project Structure
+
 ```
 music-graph/
 ├── app.py              # Flask application entry point
-├── data.py             # Genre and band data structures
+├── models.py           # SQLAlchemy database models
+├── config.py           # Database configuration
+├── init_db.py          # Database initialization script
+├── music_graph.db      # SQLite database (created by init_db.py)
 ├── templates/          # Jinja2 HTML templates
 │   └── index.html      # Main page template
 ├── static/             # CSS, JS, images
 │   └── style.css       # Dark theme styling
-└── README.md
+├── docs
+│   └── archive
+│       ├── PLANNING.md # Original design decisions and Phase 1 planning
+│       └── data.py     # Original test data for Phase 1
+└── README.md           # This file
 ```
+
+---
+
+## Development Approach
+
+- **Small iterations:** Each phase is a manageable chunk
+- **Documentation:** Blog post per major milestone
+- **AI-assisted:** Using Claude and other AI tools as development partners
+- **Learning in public:** Documenting successes and failures
+
+---
 
 ## Blog
 
@@ -267,85 +246,37 @@ This project is documented on my blog at [billgrant.io](https://billgrant.io).
 - [Adding Bands to the Graph](https://billgrant.io/2025/11/26/bands-blog-post/) - Band nodes
 - [Interactive Expand/Collapse](https://billgrant.io/2025/11/26/phase-1-5-blog-post/) - Phase 1 complete
 
+**Phase 2 Posts:**
+- [Database Integration](https://billgrant.io/2025/11/26/phase-2-blog-post/) - *(coming soon)*
+
 All posts are tagged with [#music-graph](https://billgrant.io/tags/#music-graph).
 
-## Roadmap
+---
 
 ## Known Issues and Future Refactoring
 
-### Genre Hierarchy vs. Peer Relationships
+### Genre Hierarchy Implementation
 
-**Current Issue:**
-The data structure treats all genre connections as equal/peer relationships, but the actual domain model is hierarchical:
+**Current State:**
+Phase 2 implemented proper genre hierarchy with `parent_id` and `type` fields in the database. Genres can be:
+- `root` - top-level genres (e.g., Rock)
+- `intermediate` - parent genres that organize sub-genres (e.g., Metal)
+- `leaf` - actual genres bands belong to (e.g., Death Metal, Groove Metal)
 
-- **Rock** (top-level genre)
-  - **Metal** (sub-genre of Rock, parent of metal sub-genres)
-    - **Death Metal** (leaf - bands belong here)
-    - **Groove Metal** (leaf - bands belong here)
-    - **Thrash Metal** (leaf - bands belong here)
+**Future Enhancement:**
+Add support for peer relationships (influences, crossover) separate from hierarchical relationships. This would enable modeling connections like "Jazz-Metal fusion" that don't fit a strict parent-child model.
 
-**The Problem:**
-- Bands belong to *leaf nodes* (Death Metal, Groove Metal, etc.), not intermediate nodes (Metal, Rock)
-- Current `connections` field doesn't distinguish between parent-child (hierarchical) and peer (related) relationships
-- As the genre tree grows, this will become harder to manage and visualize correctly
+See [PLANNING.md](docs/archive/PLANNING.md) for original design discussions and evolution of the data model.
 
-**Current Workaround:**
-- Using `connections` to represent hierarchy
-- Understanding that some genres (like Metal, Rock) are categories, not actual genres bands belong to
-- Bands only connect to leaf-level genres via `primary_genre`
+### Template Optimization
 
-**Planned Refactoring (Phase 2 - Database Integration):**
+**Current State:**
+Flask routes query database using SQLAlchemy, then convert objects to dictionaries for template compatibility.
 
-When moving to a database schema, implement proper hierarchy:
+**Future Enhancement:**
+Update templates to work directly with SQLAlchemy objects, eliminating the conversion step. This is a minor optimization that doesn't affect functionality.
 
-**Option A: Parent/Child with explicit types**
-```python
-{
-    "name": "Metal",
-    "parent_id": "rock",
-    "type": "intermediate",  # or "parent", "category"
-    "level": 1
-}
-
-{
-    "name": "Groove Metal",
-    "parent_id": "metal", 
-    "type": "leaf",
-    "level": 2
-}
-```
-
-**Option B: Separate relationship types**
-```python
-{
-    "name": "Groove Metal",
-    "parent_genre": "metal",        # Hierarchical relationship
-    "related_genres": ["thrash-metal"]  # Peer/influence relationships
-}
-```
-
-**Database Schema Considerations:**
-- `genres` table with `parent_id` for hierarchy
-- `genre_relationships` table for peer connections (influences, crossover, etc.)
-- Queries to get full tree path, siblings, children
-- Validation to prevent bands being assigned to non-leaf genres
-
-This will enable:
-- Better visualization (true hierarchical layout in graph)
-- Proper categorization and browsing
-- Distinction between "Metal" (category) and "Death Metal" (actual genre)
-- Related genres outside the hierarchy (e.g., Jazz-Metal fusion)
-
-**Why Not Fix Now:**
-- Current dictionary structure works for Phase 1 (proof of concept)
-- Database migration is the natural time to restructure
-- Keeps focus on getting visualization working first
-- Avoids premature optimization
-
-**References:**
-- Discussion: [GitHub Issue/Conversation Link TBD]
-- Identified: 2025-11-25
-- Planned Resolution: Phase 2 (Database Integration)
+---
 
 ## License
 
