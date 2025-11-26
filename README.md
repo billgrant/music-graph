@@ -241,6 +241,84 @@ This project is documented on my blog at [billgrant.io](https://billgrant.io).
 
 Posts are tagged with [#music-graph](https://billgrant.io/tags/#music-graph).
 
+## Roadmap
+
+## Known Issues and Future Refactoring
+
+### Genre Hierarchy vs. Peer Relationships
+
+**Current Issue:**
+The data structure treats all genre connections as equal/peer relationships, but the actual domain model is hierarchical:
+
+- **Rock** (top-level genre)
+  - **Metal** (sub-genre of Rock, parent of metal sub-genres)
+    - **Death Metal** (leaf - bands belong here)
+    - **Groove Metal** (leaf - bands belong here)
+    - **Thrash Metal** (leaf - bands belong here)
+
+**The Problem:**
+- Bands belong to *leaf nodes* (Death Metal, Groove Metal, etc.), not intermediate nodes (Metal, Rock)
+- Current `connections` field doesn't distinguish between parent-child (hierarchical) and peer (related) relationships
+- As the genre tree grows, this will become harder to manage and visualize correctly
+
+**Current Workaround:**
+- Using `connections` to represent hierarchy
+- Understanding that some genres (like Metal, Rock) are categories, not actual genres bands belong to
+- Bands only connect to leaf-level genres via `primary_genre`
+
+**Planned Refactoring (Phase 2 - Database Integration):**
+
+When moving to a database schema, implement proper hierarchy:
+
+**Option A: Parent/Child with explicit types**
+```python
+{
+    "name": "Metal",
+    "parent_id": "rock",
+    "type": "intermediate",  # or "parent", "category"
+    "level": 1
+}
+
+{
+    "name": "Groove Metal",
+    "parent_id": "metal", 
+    "type": "leaf",
+    "level": 2
+}
+```
+
+**Option B: Separate relationship types**
+```python
+{
+    "name": "Groove Metal",
+    "parent_genre": "metal",        # Hierarchical relationship
+    "related_genres": ["thrash-metal"]  # Peer/influence relationships
+}
+```
+
+**Database Schema Considerations:**
+- `genres` table with `parent_id` for hierarchy
+- `genre_relationships` table for peer connections (influences, crossover, etc.)
+- Queries to get full tree path, siblings, children
+- Validation to prevent bands being assigned to non-leaf genres
+
+This will enable:
+- Better visualization (true hierarchical layout in graph)
+- Proper categorization and browsing
+- Distinction between "Metal" (category) and "Death Metal" (actual genre)
+- Related genres outside the hierarchy (e.g., Jazz-Metal fusion)
+
+**Why Not Fix Now:**
+- Current dictionary structure works for Phase 1 (proof of concept)
+- Database migration is the natural time to restructure
+- Keeps focus on getting visualization working first
+- Avoids premature optimization
+
+**References:**
+- Discussion: [GitHub Issue/Conversation Link TBD]
+- Identified: 2025-11-25
+- Planned Resolution: Phase 2 (Database Integration)
+
 ## License
 
 [MIT](LICENSE)
