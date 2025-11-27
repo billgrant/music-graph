@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Band - Music Graph</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Add New Band</h1>
+        
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST" class="form">
+            <div class="form-group">
+                <label for="name">Band Name:</label>
+                <input type="text" id="name" name="name" 
+                       value="{{ form_data.name if form_data else '' }}" required>
+                <small>Display name (e.g., "Pantera")</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="id">Band ID (slug):</label>
+                <input type="text" id="id" name="id" 
+                       value="{{ form_data.id if form_data else '' }}" 
+                       required pattern="[a-z0-9-]+" readonly>
+                <small>Auto-generated from name. This will be the URL-friendly identifier.</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="primary_genre_id">Primary Genre:</label>
+                <select id="primary_genre_id" name="primary_genre_id" required>
+                    <option value="">-- Select Primary Genre --</option>
+                    {% for genre in genres %}
+                    <option value="{{ genre.id }}" 
+                            {% if form_data and form_data.primary_genre_id == genre.id %}selected{% endif %}>
+                        {{ genre.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <small>The main genre this band will appear under in the graph</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="genres">All Genres (select multiple):</label>
+                <select id="genres" name="genres" multiple size="6" required>
+                    {% for genre in genres %}
+                    <option value="{{ genre.id }}"
+                            {% if form_data and genre.id in form_data.getlist('genres') %}selected{% endif %}>
+                        {{ genre.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <small>Hold Ctrl (Cmd on Mac) to select multiple genres. Primary genre must be included.</small>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Add Band</button>
+                <a href="{{ url_for('index') }}" class="btn-secondary">Back to Graph</a>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        // Auto-generate slug from name
+        const nameInput = document.getElementById('name');
+        const idInput = document.getElementById('id');
+        
+        nameInput.addEventListener('input', function() {
+            const slug = this.value
+                .toLowerCase()
+                .replace(/\s+/g, '-')
+                .replace(/[^a-z0-9-]/g, '')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '');
+            
+            idInput.value = slug;
+        });
+        
+        // Auto-select primary genre in the multi-select when it's chosen
+        const primarySelect = document.getElementById('primary_genre_id');
+        const genresSelect = document.getElementById('genres');
+        
+        primarySelect.addEventListener('change', function() {
+            const primaryGenreId = this.value;
+            if (primaryGenreId) {
+                // Find and select the matching option in genres
+                for (let option of genresSelect.options) {
+                    if (option.value === primaryGenreId) {
+                        option.selected = true;
+                        break;
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
