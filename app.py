@@ -251,7 +251,7 @@ def edit_genre(genre_id):
             db.session.commit()
             
             flash(f'Genre "{new_name}" updated successfully!', 'success')
-            return redirect(url_for('edit_genre', genre_id=genre_id))
+            return redirect(url_for('admin'))
             
         except Exception as e:
             db.session.rollback()
@@ -320,7 +320,7 @@ def edit_band(band_id):
             db.session.commit()
             
             flash(f'Band "{new_name}" updated successfully!', 'success')
-            return redirect(url_for('edit_band', band_id=band_id))
+            return redirect(url_for('admin'))
             
         except Exception as e:
             db.session.rollback()
