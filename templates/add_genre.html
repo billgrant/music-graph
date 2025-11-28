@@ -7,6 +7,16 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="{{ url_for('index') }}" class="nav-brand">Music Graph</a>
+<div class="nav-links">
+    <a href="{{ url_for('add_genre') }}" class="nav-link">Add Genre</a>
+    <a href="{{ url_for('add_band') }}" class="nav-link">Add Band</a>
+    <a href="{{ url_for('admin') }}" class="nav-link">Admin</a>
+</div>
+    </div>
+</nav>    
     <div class="container">
         <h1>Add New Genre</h1>
         
