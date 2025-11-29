@@ -1,5 +1,5 @@
 from app import app
-from models import db, Genre, Band
+from models import db, Genre, Band, User
 
 def init_database():
     """Initialize the database and load initial data"""
@@ -45,10 +45,27 @@ def init_database():
         # Add all bands
         db.session.add_all([pantera, death, cannibal_corpse, anthrax])
         db.session.commit()
+
+        print("Creating admin user...")
+        
+        # Create admin user
+        admin = User(
+            username='admin',
+            email='admin@example.com',
+            is_admin=True
+        )
+        admin.set_password('admin123')  # Change this in production!
+        
+        db.session.add(admin)
+        db.session.commit()
         
         print("Database initialized successfully!")
         print(f"Genres: {Genre.query.count()}")
         print(f"Bands: {Band.query.count()}")
+        print(f"Users: {User.query.count()}")
+        print("\nAdmin user created:")
+        print("  Username: admin")
+        print("  Password: admin123")
 
 if __name__ == '__main__':
     init_database()

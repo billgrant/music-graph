@@ -7,17 +7,25 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="{{ url_for('index') }}" class="nav-brand">Music Graph</a>
+<nav class="navbar">
+    <div class="nav-container">
+        <a href="{{ url_for('index') }}" class="nav-brand">Music Graph</a>
 <div class="nav-links">
-    <a href="{{ url_for('add_genre') }}" class="nav-link">Add Genre</a>
-    <a href="{{ url_for('add_band') }}" class="nav-link">Add Band</a>
-    <a href="{{ url_for('admin') }}" class="nav-link">Admin</a>
+    {% if current_user.is_authenticated %}
+        {% if current_user.is_admin %}
+            <a href="{{ url_for('add_genre') }}" class="nav-link">Add Genre</a>
+            <a href="{{ url_for('add_band') }}" class="nav-link">Add Band</a>
+            <a href="{{ url_for('admin') }}" class="nav-link">Admin</a>
+        {% endif %}
+        <span class="nav-user">{{ current_user.username }}</span>
+        <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+    {% else %}
+        <a href="{{ url_for('login') }}" class="nav-link">Login</a>
+        <a href="{{ url_for('register') }}" class="nav-link">Register</a>
+    {% endif %}
 </div>
-        </div>
-    </nav>
-
+    </div>
+</nav>
     <div class="container">
         <h1>Edit Band: {{ band.name }}</h1>
         

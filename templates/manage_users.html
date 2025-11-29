@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users - Music Graph</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('index') }}" class="nav-brand">Music Graph</a>
+            <div class="nav-links">
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                    <a href="{{ url_for('add_genre') }}" class="nav-link">Add Genre</a>
+                    <a href="{{ url_for('add_band') }}" class="nav-link">Add Band</a>
+                    <a href="{{ url_for('admin') }}" class="nav-link">Admin</a>
+                {% endif %}
+                <span class="nav-user">{{ current_user.username }}</span>
+                <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>User Management</h1>
+        
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="admin-section">
+            <h2>All Users ({{ users|length }})</h2>
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Admin</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>
+                            {{ user.username }}
+                            {% if user.id == current_user.id %}
+                                <span class="badge badge-self">You</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {% if user.is_admin %}
+                                <span class="badge badge-admin">Admin</span>
+                            {% else %}
+                                <span class="badge badge-user">User</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td class="actions">
+                            {% if user.id != current_user.id %}
+                                <form method="POST" action="{{ url_for('toggle_admin', user_id=user.id) }}" 
+                                      style="display: inline;"
+                                      onsubmit="return confirm('Toggle admin status for {{ user.username }}?');">
+                                    <button type="submit" class="btn-edit">
+                                        {% if user.is_admin %}Remove Admin{% else %}Make Admin{% endif %}
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="form-actions">
+            <a href="{{ url_for('admin') }}" class="btn-secondary">Back to Admin Panel</a>
+        </div>
+    </div>
+</body>
+</html>

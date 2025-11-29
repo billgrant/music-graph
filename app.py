@@ -1,7 +1,10 @@
 from flask import Flask, render_template
 from config import Config
-from models import db, Genre, Band
+from models import db, Genre, Band, User
 from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from functools import wraps
+
 
 
 app = Flask(__name__)
@@ -13,6 +16,15 @@ app.config['SECRET_KEY'] = 'dev-secret-key-change-in-production'  # We'll make t
 # Initialize database
 db.init_app(app)
 
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'  # Where to redirect if not logged in
+
+# User loader callback
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
 def get_unique_connections(genres):
     """Get unique connections (avoid duplicates)"""
     connections = set()
@@ -22,6 +34,18 @@ def get_unique_connections(genres):
             edge = tuple(sorted([genre.id, genre.parent_id]))
             connections.add(edge)
     return list(connections)
+
+def admin_required(f):
+    """Decorator to require admin access"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return redirect(url_for('login'))
+        if not current_user.is_admin:
+            flash('Admin access required.', 'error')
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 @app.route('/')
 def index():
@@ -48,6 +72,7 @@ def index():
                          connections=connections)
 
 @app.route('/add-genre', methods=['GET', 'POST'])
+@admin_required
 def add_genre():
     if request.method == 'POST':
         # Get form data
@@ -120,6 +145,7 @@ def add_genre():
     return render_template('add_genre.html', genres=genres)
 
 @app.route('/add-band', methods=['GET', 'POST'])
+@admin_required
 def add_band():
     if request.method == 'POST':
         # Get form data
@@ -206,6 +232,7 @@ def add_band():
     return render_template('add_band.html', genres=genres)
 
 @app.route('/edit-genre/<genre_id>', methods=['GET', 'POST'])
+@admin_required
 def edit_genre(genre_id):
     # Get the genre to edit
     genre = Genre.query.get_or_404(genre_id)
@@ -267,6 +294,7 @@ def edit_genre(genre_id):
     return render_template('edit_genre.html', genre=genre, genres=genres)
 
 @app.route('/edit-band/<band_id>', methods=['GET', 'POST'])
+@admin_required
 def edit_band(band_id):
     # Get the band to edit
     band = Band.query.get_or_404(band_id)
@@ -336,6 +364,7 @@ def edit_band(band_id):
     return render_template('edit_band.html', band=band, genres=genres)
 
 @app.route('/delete-genre/<genre_id>', methods=['POST'])
+@admin_required
 def delete_genre(genre_id):
     genre = Genre.query.get_or_404(genre_id)
     
@@ -372,6 +401,7 @@ def delete_genre(genre_id):
 
 
 @app.route('/delete-band/<band_id>', methods=['POST'])
+@admin_required
 def delete_band(band_id):
     band = Band.query.get_or_404(band_id)
     
@@ -386,10 +416,144 @@ def delete_band(band_id):
     return redirect(request.referrer or url_for('index'))
 
 @app.route('/admin')
+@admin_required
 def admin():
     genres = Genre.query.order_by(Genre.name).all()
     bands = Band.query.order_by(Band.name).all()
     return render_template('admin.html', genres=genres, bands=bands)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    # If already logged in, redirect to home
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        username = request.form['username'].strip()
+        password = request.form['password']
+        
+        # Find user by username
+        user = User.query.filter_by(username=username).first()
+        
+        # Check if user exists and password is correct
+        if user is None or not user.check_password(password):
+            flash('Invalid username or password', 'error')
+            return redirect(url_for('login'))
+        
+        # Log the user in
+        login_user(user)
+        flash(f'Welcome back, {user.username}!', 'success')
+        
+        # Redirect to next page or home
+        next_page = request.args.get('next')
+        if next_page:
+            return redirect(next_page)
+        return redirect(url_for('index'))
+    
+    return render_template('login.html')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    # If already logged in, redirect to home
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        username = request.form['username'].strip()
+        email = request.form['email'].strip()
+        password = request.form['password']
+        password_confirm = request.form['password_confirm']
+        
+        # Validation
+        errors = []
+        
+        if not username:
+            errors.append("Username is required")
+        if not email:
+            errors.append("Email is required")
+        if not password:
+            errors.append("Password is required")
+        
+        # Check password match
+        if password != password_confirm:
+            errors.append("Passwords do not match")
+        
+        # Check password length
+        if len(password) < 6:
+            errors.append("Password must be at least 6 characters")
+        
+        # Check if username already exists
+        if username and User.query.filter_by(username=username).first():
+            errors.append(f"Username '{username}' is already taken")
+        
+        # Check if email already exists
+        if email and User.query.filter_by(email=email).first():
+            errors.append(f"Email '{email}' is already registered")
+        
+        if errors:
+            for error in errors:
+                flash(error, 'error')
+            return render_template('register.html', form_data=request.form)
+        
+        # Create new user
+        try:
+            new_user = User(
+                username=username,
+                email=email,
+                is_admin=False  # New users are not admins
+            )
+            new_user.set_password(password)
+            
+            db.session.add(new_user)
+            db.session.commit()
+            
+            # Log them in automatically
+            login_user(new_user)
+            
+            flash(f'Account created successfully! Welcome, {username}!', 'success')
+            return redirect(url_for('index'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error creating account: {str(e)}', 'error')
+            return render_template('register.html', form_data=request.form)
+    
+    return render_template('register.html')
+
+@app.route('/logout')
+@admin_required
+def logout():
+    logout_user()
+    flash('You have been logged out.', 'success')
+    return redirect(url_for('index'))
+
+@app.route('/admin/users')
+@admin_required
+def manage_users():
+    users = User.query.order_by(User.created_at.desc()).all()
+    return render_template('manage_users.html', users=users)
+
+@app.route('/admin/users/toggle-admin/<int:user_id>', methods=['POST'])
+@admin_required
+def toggle_admin(user_id):
+    user = User.query.get_or_404(user_id)
+    
+    # Prevent removing your own admin rights
+    if user.id == current_user.id:
+        flash('You cannot change your own admin status', 'error')
+        return redirect(url_for('manage_users'))
+    
+    user.is_admin = not user.is_admin
+    action = "granted" if user.is_admin else "removed"
+    
+    try:
+        db.session.commit()
+        flash(f'Admin rights {action} for {user.username}', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error updating user: {str(e)}', 'error')
+    
+    return redirect(url_for('manage_users'))
 
 if __name__ == '__main__':
     app.run(debug=True)
