@@ -6,19 +6,20 @@ An interactive web application that visualizes music genres and bands as a conne
 
 Create a visual map showing how music genres relate to each other and which bands belong to which genres. Users can explore genre relationships and discover bands within each style of music.
 
-## Current Phase: Phase 4 - User Authentication (Starting)
+## Current Phase: Phase 5 - Initial Deployment (Planning)
 
-Adding user accounts, login/logout, and protecting CRUD operations.
+Planning deployment to homelab environment to make the application accessible beyond localhost.
 
-### Phase 3 Summary (Complete ✅)
-Phase 3 successfully added full CRUD operations:
-- Web forms for adding genres and bands
-- Edit functionality for updating existing data
-- Delete operations with safety checks
-- Admin panel for viewing and managing all data
-- Navigation bar connecting all features
-- Validation and error handling throughout
-- Flash messages for user feedback
+### Phase 4 Summary (Complete ✅)
+Phase 4 successfully added authentication and authorization:
+- User registration and login system
+- Secure password hashing with Werkzeug
+- Session management with Flask-Login
+- Role-based access control (admin vs regular users)
+- Protected CRUD routes (admin only)
+- Admin user management interface
+- CLI script for managing admin status
+- Navbar adapts to user role and auth status
 
 ---
 
@@ -77,6 +78,27 @@ Phase 3 successfully added full CRUD operations:
 
 **Release:** [v0.2.0-alpha](https://github.com/billgrant/music-graph/releases/tag/v0.2.0-alpha)
 
+### Phase 4: User Authentication ✅
+**Goal:** Secure the application with user accounts and role-based access
+
+**Completed:**
+- ✅ User registration with email and password validation
+- ✅ Login/logout functionality with Flask-Login
+- ✅ Session management and secure cookies
+- ✅ Password hashing with Werkzeug Security (never store plain text)
+- ✅ User model with admin flag and timestamps
+- ✅ `@admin_required` decorator for protecting routes
+- ✅ Role-based access control (admin vs regular users)
+- ✅ Admin user management page (promote/demote users)
+- ✅ CLI script (`make_admin.py`) for managing admin status
+- ✅ Navbar conditionally displays based on authentication and role
+- ✅ Protection against users changing their own admin status
+
+**Blog Posts:**
+- [User Authentication and Authorization](https://billgrant.io/2025/11/26/phase-4-blog-post/)
+
+**Release:** [v0.3.0-alpha](https://github.com/billgrant/music-graph/releases/tag/v0.3.0-alpha)
+
 ---
 
 ## Technology Stack
@@ -86,11 +108,12 @@ Phase 3 successfully added full CRUD operations:
 - Flask web framework
 - SQLAlchemy ORM
 - SQLite database
+- Flask-Login for authentication
+- Werkzeug Security for password hashing
 - Vis.js for graph visualization
 - HTML/CSS/JavaScript frontend
 
 **Future Additions:**
-- User authentication (Flask-Login or similar)
 - PostgreSQL (migration from SQLite)
 - Docker containerization
 - CI/CD with GitHub Actions
@@ -213,7 +236,16 @@ uv pip install flask flask-sqlalchemy
 python init_db.py
 ```
 
-This creates `music_graph.db` and loads initial data.
+This creates `music_graph.db`, loads initial data, and creates an admin user:
+- Username: `admin`
+- Password: `admin123`
+
+**Important:** Change the admin password after first login!
+
+You can create additional admin users with:
+```bash
+python make_admin.py <username>
+```
 
 4. Run the application:
 ```bash
@@ -269,6 +301,9 @@ This project is documented on my blog at [billgrant.io](https://billgrant.io).
 
 **Phase 3 Posts:**
 - [CRUD Operations and Admin Panel](https://billgrant.io/2025/11/26/phase-3-blog-post/) - Full data management
+
+**Phase 4 Posts:**
+- [User Authentication and Authorization](https://billgrant.io/2025/11/26/phase-4-blog-post/) - Login and role-based access
 
 All posts are tagged with [#music-graph](https://billgrant.io/tags/#music-graph).
 ---
