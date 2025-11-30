@@ -2,7 +2,7 @@
 set -e  # Exit on error
 
 # Update system
-apt-get update
+sudo apt-get update
 
 # Install Docker
 curl -fsSL https://get.docker.com -o get-docker.sh
@@ -27,6 +27,6 @@ docker --version
 docker-compose --version
 
 # Install git
-apt-get install -y git
+sudo apt-get install -y git
 
-echo "Setup complete at $(date)" >> /var/log/startup-script.log
+echo "Setup complete at $(date)" >> /home/${SSH_USER:-ubuntu}/setup.log
