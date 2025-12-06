@@ -6,9 +6,18 @@ An interactive web application that visualizes music genres and bands as a conne
 
 Create a visual map showing how music genres relate to each other and which bands belong to which genres. Users can explore genre relationships and discover bands within each style of music.
 
-## Current Phase: Phase 5 - Initial Deployment (Planning)
+## Current Phase: Phase 6 - CI/CD and DevOps (Planning)
 
-Planning deployment to homelab environment to make the application accessible beyond localhost.
+Planning automated deployment pipeline and development workflow improvements.
+
+### Phase 5 Summary (Complete ✅)
+Phase 5 successfully deployed the application to production on Google Cloud Platform:
+- Dockerized application with PostgreSQL database
+- Terraform-managed infrastructure (Compute Engine, static IP, firewall)
+- Nginx reverse proxy with Let's Encrypt SSL
+- IP-restricted access for security
+- Production-ready secrets management
+- Live at https://music-graph.billgrant.io
 
 ### Phase 4 Summary (Complete ✅)
 Phase 4 successfully added authentication and authorization:
@@ -99,6 +108,26 @@ Phase 4 successfully added authentication and authorization:
 
 **Release:** [v0.3.0-alpha](https://github.com/billgrant/music-graph/releases/tag/v0.3.0-alpha)
 
+### Phase 5: Production Deployment ✅
+**Goal:** Deploy to cloud infrastructure and make accessible to users
+
+**Completed:**
+- ✅ Terraform infrastructure as code (GCP Compute Engine)
+- ✅ Dockerized application with docker-compose
+- ✅ PostgreSQL database (migrated from SQLite)
+- ✅ Nginx reverse proxy configuration
+- ✅ SSL/HTTPS with Let's Encrypt (Certbot)
+- ✅ Static IP allocation and DNS configuration
+- ✅ IP-restricted firewall rules
+- ✅ Environment-based secrets management
+- ✅ Database persistence across container restarts
+- ✅ Production cleanup (removed debug UI elements)
+
+**Blog Posts:**
+- [Production Deployment to GCP](https://billgrant.io/2025/11/26/phase-5-gcp-deployment/)
+
+**Release:** [v0.4.0-alpha](https://github.com/billgrant/music-graph/releases/tag/v0.4.0-alpha)
+
 ---
 
 ## Technology Stack
@@ -107,94 +136,52 @@ Phase 4 successfully added authentication and authorization:
 - Python 3.12+
 - Flask web framework
 - SQLAlchemy ORM
-- SQLite database
+- PostgreSQL database (production) / SQLite (development)
 - Flask-Login for authentication
 - Werkzeug Security for password hashing
 - Vis.js for graph visualization
 - HTML/CSS/JavaScript frontend
+- Docker and docker-compose
+- Nginx reverse proxy
+- Let's Encrypt SSL certificates
+- Google Cloud Platform (Compute Engine)
+- Terraform for infrastructure as code
 
 **Future Additions:**
-- PostgreSQL (migration from SQLite)
-- Docker containerization
-- CI/CD with GitHub Actions
-- Monitoring (Grafana/ELK)
+- GitHub Actions CI/CD
+- Monitoring (Prometheus/Grafana or Cloud Monitoring)
+- Centralized logging
+- Cloud SQL managed database
 - REST API
 
 ---
 
 ## Roadmap
 
-### Phase 3: CRUD Operations (Next)
-**Goal:** Add ability to manage genres and bands through web interface
+### Phase 6: CI/CD and DevOps (Next)
+**Goal:** Automate deployments and improve development workflow
 
 **Planned:**
-- Create forms for adding genres and bands
-- Implement edit and delete functionality
-- Add validation and error handling
-- Simple admin interface for data management
+- GitHub Actions for automated testing and deployment
+- Separate dev environment (test without breaking prod)
+- Database backup strategy and restore procedures
+- Monitoring and logging infrastructure
+- Fix certbot auto-renewal for IP-restricted firewall
+- Automated container rebuilds on code changes
 
-**Why:** Enable adding content without editing code or database directly
-
-### Phase 4: User Authentication
-**Goal:** Secure the application with user accounts
-
-**Planned:**
-- User registration and login
-- Session management
-- Protect CRUD operations (must be logged in)
-- Basic authorization (who can edit what)
-- Consider role-based access (admin vs. contributor)
-
-**Why:** Prepare for multi-user access and prevent unauthorized changes
-
-### Phase 5: Initial Deployment
-**Goal:** Deploy to server and make accessible
-
-**Planned:**
-- Deploy to homelab environment
-- Configure networking and reverse proxy
-- Set up SSL certificates
-- Make accessible to first user (Aidan)
-- Basic production configuration
-
-**Why:** Move from local development to usable application
-
-### Phase 6: Dev/Test/Prod Environments
-**Goal:** Separate development from production to prevent breaking live application
-
-**Planned:**
-- Dev environment (local development)
-- Test/Staging environment (pre-production testing)
-- Prod environment (stable version for users)
-- Separate databases for each environment
-- Deployment workflow/pipeline
-- Database migration strategy
-
-**Why:** Once users are actively using the app, we need to develop new features without disrupting production
+**Why:** Enable continuous feature development without disrupting Aidan's usage
 
 ### Phase 7: Monitoring and Observability
 **Goal:** Understand application health and usage
 
 **Planned:**
-- Grafana dashboards for application metrics
-- ELK stack or similar for logging
-- Application performance monitoring
-- Alerting for issues
+- Application metrics and dashboards
+- Error tracking and alerting
 - Usage analytics
+- Performance monitoring
+- Cost tracking and optimization
 
 **Why:** Know when things break and understand how the app is being used
-
-### Phase 8: CI/CD Pipeline
-**Goal:** Automate testing and deployment
-
-**Planned:**
-- GitHub Actions workflow
-- Automated testing
-- Automated deployment to staging/production
-- Rollback strategies
-- Version tagging automation
-
-**Why:** Reduce manual deployment work and catch issues early
 
 ### Future Enhancements
 - Recommendation engine ("If you like X, try Y")
@@ -202,11 +189,10 @@ Phase 4 successfully added authentication and authorization:
 - Advanced graph algorithms (shortest path between genres)
 - Mobile-responsive design improvements
 - Community features (voting, discussions, comments)
-- Search and filtering
+- Enhanced search and filtering
 - Band detail pages with more metadata
-- Cloud migration (if homelab proves insufficient)
 - API for external integrations
-- Template optimization (use SQLAlchemy objects directly vs. dict conversion)
+- Migration to managed database service (Cloud SQL)
 
 ---
 
@@ -304,6 +290,9 @@ This project is documented on my blog at [billgrant.io](https://billgrant.io).
 
 **Phase 4 Posts:**
 - [User Authentication and Authorization](https://billgrant.io/2025/11/26/phase-4-blog-post/) - Login and role-based access
+
+**Phase 5 Posts:**
+- [Production Deployment to GCP](https://billgrant.io/2025/11/26/phase-5-blog-post/) - Docker, Terraform, SSL, cloud infrastructure
 
 All posts are tagged with [#music-graph](https://billgrant.io/tags/#music-graph).
 ---
