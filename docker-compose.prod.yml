@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:16-alpine
+    env_file:
+      - .env.prod
+    environment:
+      POSTGRES_USER: musicgraph
+      POSTGRES_DB: musicgraph
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U musicgraph"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    env_file:
+      - .env.prod
+    ports:
+      # - "5000:5000"  # Allow external access temporarily
+      - "127.0.0.1:5000:5000"  # Only localhost (Nginx will proxy)
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

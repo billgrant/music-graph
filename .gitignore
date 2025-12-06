@@ -207,3 +207,19 @@ marimo/_lsp/
 __marimo__/
 
 .DS_Store
+
+# Environment files with secrets
+.env
+.env.prod
+.env.dev
+.env.*
+
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/*.tfvars  # Contains sensitive project IDs and IPs
+
+# Docker
+docker-compose.override.yml
