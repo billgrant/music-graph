@@ -13,6 +13,13 @@ provider "google" {
   region  = var.region
 }
 
+# Static IP address
+resource "google_compute_address" "music_graph_ip" {
+  name   = "${var.environment}-music-graph-ip"
+  region = var.region
+}
+
+
 # Compute Engine instance
 resource "google_compute_instance" "music_graph" {
   name         = "${var.environment}-music-graph"
@@ -32,7 +39,7 @@ resource "google_compute_instance" "music_graph" {
   network_interface {
     network = "default"
     access_config {
-      // Ephemeral public IP
+      nat_ip = google_compute_address.music_graph_ip.address
     }
   }
 
