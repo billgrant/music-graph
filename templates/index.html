@@ -36,42 +36,6 @@
         <!-- This is the container where the graph will render -->
         <div id="network-graph"></div>
 
-        <!-- Keep the lists below for reference -->
-        <div class="section">
-            <h2>Genres</h2>
-            <div class="genre-list">
-                {% for genre_id, genre_data in genres.items() %}
-                <div class="genre-card">
-                    <h3>{{ genre_data.name }}</h3>
-                    <p class="connections">
-                        <strong>Connections:</strong>
-                        {% for connection in genre_data.connections %}
-                        {{ genres[connection].name }}{% if not loop.last %}, {% endif %}
-                        {% endfor %}
-                    </p>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <div class="section">
-            <h2>Bands</h2>
-            <div class="band-list">
-                {% for band_id, band_data in bands.items() %}
-                <div class="band-card">
-                    <h3>{{ band_data.name }}</h3>
-                    <p class="genres">
-                        <strong>Genres:</strong>
-                        {% for genre in band_data.genres %}
-                        {{ genres[genre].name }}{% if not loop.last %}, {% endif %}
-                        {% endfor %}
-                    </p>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-
     <!-- JavaScript to create the graph -->
     <script type="text/javascript">
 
