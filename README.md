@@ -294,6 +294,9 @@ This project is documented on my blog at [billgrant.io](https://billgrant.io).
 **Phase 5 Posts:**
 - [Production Deployment to GCP](https://billgrant.io/2025/11/26/phase-5-blog-post/) - Docker, Terraform, SSL, cloud infrastructure
 
+**Workflow Posts:**
+- [Upgrading My AI Workflow with MCP](https://billgrant.io/2025/12/07/mcp-setup/) - Model Context Protocol setup for better file access
+
 All posts are tagged with [#music-graph](https://billgrant.io/tags/#music-graph).
 ---
 
