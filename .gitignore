@@ -223,3 +223,6 @@ terraform/*.tfvars  # Contains sensitive project IDs and IPs
 
 # Docker
 docker-compose.override.yml
+
+# Database file
+music_graph.db
