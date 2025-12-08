@@ -5,7 +5,7 @@ services:
       - .env.dev
     environment:
       POSTGRES_USER: musicgraph
-      POSTGRES_DB: musicgraph_dev
+      POSTGRES_DB: musicgraph
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
     restart: unless-stopped
