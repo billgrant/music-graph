@@ -17,11 +17,17 @@ def init_database():
         
         # Intermediate genre (parent of sub-genres, but not a "real" genre for bands)
         metal = Genre(id='metal', name='Metal', parent_id='rock', type='intermediate')
+        metal.parent_genres = [rock]  # Add to many-to-many relationship
         
         # Leaf genres (actual genres bands belong to)
         death_metal = Genre(id='death-metal', name='Death Metal', parent_id='metal', type='leaf')
+        death_metal.parent_genres = [metal]
+        
         groove_metal = Genre(id='groove-metal', name='Groove Metal', parent_id='metal', type='leaf')
+        groove_metal.parent_genres = [metal]
+        
         thrash_metal = Genre(id='thrash-metal', name='Thrash Metal', parent_id='metal', type='leaf')
+        thrash_metal.parent_genres = [metal]
         
         # Add all genres
         db.session.add_all([rock, metal, death_metal, groove_metal, thrash_metal])
