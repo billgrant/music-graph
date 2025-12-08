@@ -10,6 +10,6 @@ exclude =
     dist,
     migrations
 ignore =
-    E501,  # line too long (handled by max-line-length)
-    W503,  # line break before binary operator (outdated)
-    E203   # whitespace before ':' (conflicts with black)
+    E501,
+    W503,
+    E203
