@@ -11,6 +11,7 @@ echo "PostgreSQL ready!"
 
 # Check if database is already initialized
 echo "Checking if database needs initialization..."
+set +e  # Temporarily disable exit on error
 python -c "
 from app import app
 from models import db, Genre
@@ -24,9 +25,11 @@ with app.app_context():
         print(f'Database needs initialization: {e}')
         exit(1)
 "
+DB_CHECK_EXIT=$?
+set -e  # Re-enable exit on error
 
 # If previous command failed (exit code 1), initialize database
-if [ $? -eq 1 ]; then
+if [ $DB_CHECK_EXIT -eq 1 ]; then
     echo "Initializing database..."
     python init_db.py || {
         echo "ERROR: Database initialization failed!"
