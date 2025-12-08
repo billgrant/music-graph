@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:16-alpine
+    env_file:
+      - .env.dev
+    environment:
+      POSTGRES_USER: musicgraph
+      POSTGRES_DB: musicgraph_dev
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U musicgraph"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    env_file:
+      - .env.dev
+    ports:
+      - "127.0.0.1:5000:5000"  # Nginx will proxy to this
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+
+volumes:
+  postgres_dev_data:
