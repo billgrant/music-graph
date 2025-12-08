@@ -6,9 +6,19 @@ An interactive web application that visualizes music genres and bands as a conne
 
 Create a visual map showing how music genres relate to each other and which bands belong to which genres. Users can explore genre relationships and discover bands within each style of music.
 
-## Current Phase: Phase 6 - CI/CD and DevOps (Planning)
+## Current Phase: Phase 7 - CI/CD and DevOps (Planning)
 
 Planning automated deployment pipeline and development workflow improvements.
+
+### Phase 6 Summary (Complete ✅)
+Phase 6 added multiple parent genre support:
+- Added `genre_parents` association table for many-to-many relationships
+- Genres can now have multiple parents (e.g., Grindcore → Metal + Hardcore)
+- Primary parent determines graph visualization (clean display)
+- All parent relationships stored for metadata and future detail views
+- Updated add/edit genre forms with multi-select parent selection
+- Migration script to populate existing relationships
+- Maintains backward compatibility with existing data
 
 ### Phase 5 Summary (Complete ✅)
 Phase 5 successfully deployed the application to production on Google Cloud Platform:
@@ -293,6 +303,9 @@ This project is documented on my blog at [billgrant.io](https://billgrant.io).
 
 **Phase 5 Posts:**
 - [Production Deployment to GCP](https://billgrant.io/2025/11/26/phase-5-blog-post/) - Docker, Terraform, SSL, cloud infrastructure
+
+**Phase 6 Posts:**
+- [Multiple Parent Genres](https://billgrant.io/2025/12/08/phase-6-multiple-parent-genres/) - Many-to-many parent relationships
 
 **Workflow Posts:**
 - [Upgrading My AI Workflow with MCP](https://billgrant.io/2025/12/07/mcp-setup/) - Model Context Protocol setup for better file access
