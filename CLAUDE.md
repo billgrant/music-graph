@@ -1,29 +1,39 @@
 # Music Graph Project - Claude Context
 
-**Last Updated:** December 8, 2025 (After Phase 6)
+**Last Updated:** December 8, 2025 (Phase 7 - Phases 1 & 2 Complete)
 
 ## Project Overview
 
 Music Graph is a Flask web application that visualizes music genre hierarchies and band relationships as an interactive graph. Built as a learning project with AI-assisted development, documenting the journey through blog posts.
 
-**Live Site:** https://music-graph.billgrant.io
+**Live Sites:**
+- **Production:** https://music-graph.billgrant.io
+- **Development:** https://dev.music-graph.billgrant.io
 
 **Tech Stack:**
 - Python 3.12 + Flask
-- PostgreSQL (production) / SQLite (local)
+- PostgreSQL (production/dev) / SQLite (local)
 - Docker + docker-compose
 - Deployed on Google Cloud Platform (Compute Engine)
-- Terraform for infrastructure
+- Terraform for infrastructure (with workspaces)
+- GitHub Actions for CI/CD
 - GitHub for version control
 
-## Current Phase: Phase 7 (Next)
+## Current Phase: Phase 7 (In Progress)
 
 **Focus:** CI/CD and DevOps
-- GitHub Actions for automated deployment
-- Separate dev/staging environment
-- Database backup strategies
-- Proper testing workflows
-- Fix certbot auto-renewal with IP restrictions
+
+**Completed:**
+- ✅ GitHub Actions for automated testing
+- ✅ Separate dev environment with own VM and database
+- ✅ Test suite (17 tests, all passing)
+- ✅ Code coverage and linting in CI
+
+**Next:**
+- ⏳ Automated deployment to dev on push to main
+- ⏳ Manual promotion to production
+- ⏳ Database backup strategies
+- ⏳ Fix certbot auto-renewal with IP restrictions
 
 **Previous Phase:** Phase 6 (Complete) - Multiple parent genres support
 

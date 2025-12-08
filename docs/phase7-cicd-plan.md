@@ -1,7 +1,8 @@
 # Phase 7: CI/CD and DevOps - Implementation Plan
 
-**Status:** Phase 1 Complete (CI Setup)
+**Status:** Phase 1 & 2 Complete (CI Setup + Dev Environment)
 **Date:** December 8, 2025
+**Last Updated:** December 8, 2025
 
 ## Overview
 
@@ -10,13 +11,13 @@ Phase 7 focuses on implementing automated testing, continuous integration, and c
 ## Phase 7 Goals
 
 - ✅ GitHub Actions for automated testing
-- ⏳ Separate dev/staging environment
+- ✅ Separate dev/staging environment
 - ⏳ Automated deployment to dev
 - ⏳ Manual/automated promotion to production
 - ⏳ Database backup strategies
 - ⏳ Fix certbot auto-renewal with IP restrictions
 
-## Phase 1: CI Setup (Complete)
+## Phase 1: CI Setup ✅ (Complete)
 
 ### What We Built
 
@@ -62,7 +63,82 @@ Before pushing these changes:
 2. Fix any linting issues that flake8 finds
 3. Review test coverage and add tests as needed
 
-## Phase 2: Dev Environment Setup (Next)
+## Phase 2: Dev Environment Setup ✅ (Complete)
+
+### What We Built
+
+1. **Separate GCP VM**
+   - VM: `dev-music-graph` (e2-micro)
+   - IP: 34.139.187.195
+   - Zone: us-east1-b
+   - Cost: ~$10/month
+
+2. **Terraform Workspaces**
+   - `prod` workspace - manages production VM
+   - `dev` workspace - manages dev VM
+   - Isolated state files prevent accidental infrastructure changes
+
+3. **Dev Environment Configuration**
+   - `docker-compose.dev.yml` - Dev stack configuration
+   - `.env.dev.example` - Environment variables template
+   - Separate PostgreSQL database (`musicgraph`)
+
+4. **Domain and SSL**
+   - URL: https://dev.music-graph.billgrant.io
+   - Let's Encrypt SSL certificate via certbot
+   - Nginx reverse proxy to Flask app
+
+5. **Database Initialization**
+   - Fixed `entrypoint.sh` to automatically initialize database
+   - Handles both fresh and existing database scenarios
+   - Proper error handling and logging
+
+### Issues Encountered and Fixed
+
+1. **Terraform Workspace Confusion**
+   - Problem: Initial plan would have replaced prod VM
+   - Solution: Implemented Terraform workspaces for state isolation
+   - Learning: Always verify workspace before terraform commands
+
+2. **Startup Script Variables**
+   - Problem: SSH_USER variable not passed to startup script
+   - Attempted: templatefile() solution caused prod replacement risk
+   - Resolution: Reverted to simple script, manual docker group setup
+   - Created: Issue #7 for Packer/Ansible automation
+
+3. **Database Name Mismatch**
+   - Problem: docker-compose created `musicgraph_dev`, entrypoint expected `musicgraph`
+   - Solution: Changed docker-compose to use `musicgraph` database name
+   - Fixed: Updated .env.dev.example to match
+
+4. **Entrypoint Script Exit on Error**
+   - Problem: `set -e` caused script to exit before running init_db.py
+   - Solution: Temporarily disable `set -e` during database check
+   - Capture exit code, then re-enable strict mode
+   - Now properly initializes database on first run
+
+### Current State
+
+**Production:**
+- URL: https://music-graph.billgrant.io
+- VM: `prod-music-graph`
+- Workspace: `prod`
+- Status: Running, unaffected by dev setup
+
+**Development:**
+- URL: https://dev.music-graph.billgrant.io
+- VM: `dev-music-graph`
+- IP: 34.139.187.195
+- Workspace: `dev`
+- Status: Fully operational, database initializing correctly
+
+### Documentation Created
+
+- `docs/dev-environment-setup.md` - Complete deployment guide
+- `docs/terraform-workspace-guide.md` - Workspace management reference
+- Updated `docker-compose.dev.yml` and `.env.dev.example`
+
+## Phase 3: CD to Dev (Next)
 
 ### Infrastructure Requirements
 
