@@ -23,12 +23,15 @@ with app.app_context():
     except Exception as e:
         print(f'Database needs initialization: {e}')
         exit(1)
-" 2>/dev/null
+"
 
 # If previous command failed (exit code 1), initialize database
 if [ $? -eq 1 ]; then
     echo "Initializing database..."
-    python init_db.py
+    python init_db.py || {
+        echo "ERROR: Database initialization failed!"
+        exit 1
+    }
 else
     echo "Skipping database initialization (already exists)"
 fi
