@@ -233,6 +233,28 @@ docker-compose -f docker-compose.prod.yml exec web python <command>
 - Discussing trade-offs openly
 - Methodical testing
 
+**Code Change Workflow (Important!):**
+1. Explain the problem and why it's happening
+2. Propose the solution with exact code changes shown
+3. Discuss trade-offs or alternatives
+4. **Wait for approval** before making changes
+5. For new patterns: Show first example in detail, get understanding
+6. Similar changes can then move faster
+
+**Bill's Background:**
+- 4 years at HashiCorp as Solutions Engineer (expert in Terraform!)
+- Networking and system administration background
+- Strong DevOps/infrastructure knowledge
+- Building this as a learning project ("jack of all trades, master of none")
+
+**Learning Priorities (Focus Areas):**
+1. **JavaScript/vis.js** - Almost nothing known, wants to learn
+2. **Python Testing (pytest)** - Knows basics, wants patterns and best practices
+3. **Flask** - New to framework, wants to learn patterns
+4. **GitHub Actions** - Knows enough to get by, wants more depth (job-related)
+5. **Databases** - Admin-level knowledge, wants developer perspective
+6. **Terraform/DevOps** - Already expert, trust his judgment here!
+
 **Blog posts should:**
 - Have Bill's intro between `*** ***` markers
 - Be written by Claude below that
