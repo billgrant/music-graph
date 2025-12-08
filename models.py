@@ -4,6 +4,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
+# Association table for many-to-many genre parent relationships
+genre_parents = db.Table('genre_parents',
+    db.Column('genre_id', db.String(50), db.ForeignKey('genres.id'), primary_key=True),
+    db.Column('parent_genre_id', db.String(50), db.ForeignKey('genres.id'), primary_key=True)
+)
+
 class Genre(db.Model):
     __tablename__ = 'genres'
     
@@ -14,6 +20,14 @@ class Genre(db.Model):
     
     # Relationships
     parent = db.relationship('Genre', remote_side=[id], backref='children')
+    # Many-to-many for all parent genres
+    parent_genres = db.relationship(
+        'Genre',
+        secondary=genre_parents,
+        primaryjoin=(id == genre_parents.c.genre_id),
+        secondaryjoin=(id == genre_parents.c.parent_genre_id),
+        backref='child_genres'
+    )
     bands = db.relationship('Band', back_populates='primary_genre')
     
     def __repr__(self):

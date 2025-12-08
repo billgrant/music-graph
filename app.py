@@ -80,7 +80,8 @@ def add_genre():
         name = request.form['name'].strip()
         parent_id = request.form['parent_id'].strip() if request.form['parent_id'] else None
         genre_type = request.form['type']
-        
+        # Get selected parent genres (multi-select)
+        selected_parent_ids = request.form.getlist('parent_genres')
         # Validation
         errors = []
         
@@ -101,6 +102,9 @@ def add_genre():
             parent = Genre.query.get(parent_id)
             if not parent:
                 errors.append(f"Parent genre '{parent_id}' does not exist")
+            # Validate primary parent is in selected parents
+            if parent_id and selected_parent_ids and parent_id not in selected_parent_ids:
+                errors.append("Primary parent must be included in the selected parent genres")
         
         # Validate ID format (only lowercase letters, numbers, hyphens)
         import re
@@ -125,7 +129,11 @@ def add_genre():
                 parent_id=parent_id,
                 type=genre_type
             )
-            
+
+            # Add parent genre relationships
+            if selected_parent_ids:
+                selected_parents = Genre.query.filter(Genre.id.in_(selected_parent_ids)).all()
+                new_genre.parent_genres = selected_parents
             db.session.add(new_genre)
             db.session.commit()
             
@@ -242,7 +250,9 @@ def edit_genre(genre_id):
         new_name = request.form['name'].strip()
         new_parent_id = request.form['parent_id'].strip() if request.form['parent_id'] else None
         new_type = request.form['type']
-        
+        # Get selected parent genres (multi-select)
+        selected_parent_ids = request.form.getlist('parent_genres')
+
         # Validation
         errors = []
         
@@ -259,6 +269,12 @@ def edit_genre(genre_id):
             # Prevent circular reference (genre can't be its own parent)
             if new_parent_id == genre_id:
                 errors.append("A genre cannot be its own parent")
+            # Validate primary parent is in selected parents
+            if new_parent_id and selected_parent_ids and new_parent_id not in selected_parent_ids:
+                errors.append("Primary parent must be included in the selected parent genres")
+            # Prevent circular reference in parent_genres
+            if genre_id in selected_parent_ids:
+                errors.append("A genre cannot be its own parent")
         
         if errors:
             for error in errors:
@@ -274,6 +290,13 @@ def edit_genre(genre_id):
             genre.name = new_name
             genre.parent_id = new_parent_id
             genre.type = new_type
+
+            # Update parent genre relationships
+            if selected_parent_ids:
+                selected_parents = Genre.query.filter(Genre.id.in_(selected_parent_ids)).all()
+                genre.parent_genres = selected_parents
+            else:
+                genre.parent_genres = []
             
             db.session.commit()
             

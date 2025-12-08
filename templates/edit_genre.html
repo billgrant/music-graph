@@ -71,7 +71,7 @@
             </div>
             
             <div class="form-group">
-                <label for="parent_id">Parent Genre (optional):</label>
+                <label for="parent_id">Primary Parent Genre (optional):</label>
                 <select id="parent_id" name="parent_id">
                     <option value="">-- No Parent (Root Genre) --</option>
                     {% for g in genres %}
@@ -81,14 +81,47 @@
                     </option>
                     {% endfor %}
                 </select>
-                <small>Select a parent genre to create hierarchy</small>
+                <small>Primary parent shown in graph visualization</small>
             </div>
             
+            <div class="form-group">
+        <label for="parent_genres">All Parent Genres (optional):</label>
+        <select id="parent_genres" name="parent_genres" multiple size="8">
+            {% for g in genres %}
+            <option value="{{ g.id }}"
+                    {% if form_data %}
+                        {% if g.id in form_data.getlist('parent_genres') %}selected{% endif %}
+                    {% else %}
+                        {% if g in genre.parent_genres %}selected{% endif %}
+                    {% endif %}>
+                {{ g.name }}
+            </option>
+            {% endfor %}
+        </select>
+        <small>Hold Ctrl (Cmd on Mac) to select multiple. Primary parent must be included in this list.</small>
+    </div>
+
             <div class="form-actions">
                 <button type="submit" class="btn-primary">Update Genre</button>
                 <a href="{{ url_for('index') }}" class="btn-secondary">Cancel</a>
             </div>
         </form>
     </div>
+    
+    <script>
+        // Auto-select primary parent in multi-select when changed
+        const primaryParentSelect = document.getElementById('parent_id');
+        const allParentsSelect = document.getElementById('parent_genres');
+        
+        primaryParentSelect.addEventListener('change', function() {
+            if (this.value) {
+                // Find and select the option in the multi-select
+                const option = allParentsSelect.querySelector(`option[value="${this.value}"]`);
+                if (option) {
+                    option.selected = true;
+                }
+            }
+        });
+    </script>
 </body>
 </html>
