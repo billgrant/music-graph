@@ -266,21 +266,24 @@ jobs:
         git tag -a "$VERSION" -m "Release $VERSION"
         git push origin "$VERSION"
 
-        # Create GitHub release
-        RELEASE_NOTES="Deployed to production on $(date +'%Y-%m-%d %H:%M:%S UTC')
+        # Create GitHub release with multi-line notes
+        RELEASE_NOTES=$(cat <<EOF
+        Deployed to production on $(date +'%Y-%m-%d %H:%M:%S UTC')
 
-**Deployed by:** ${ACTOR}
-**Commit:** ${COMMIT}
-**Docker image:** gcr.io/${PROJECT_ID}/music-graph:${VERSION}
+        **Deployed by:** ${ACTOR}
+        **Commit:** ${COMMIT}
+        **Docker image:** gcr.io/${PROJECT_ID}/music-graph:${VERSION}
 
-## Deployment
-- ✅ Tests passed
-- ✅ Image built and pushed to GCR
-- ✅ Database backup created
-- ✅ Deployed to production
-- ✅ Health checks passed
+        ## Deployment
+        - ✅ Tests passed
+        - ✅ Image built and pushed to GCR
+        - ✅ Database backup created
+        - ✅ Deployed to production
+        - ✅ Health checks passed
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code)"
+        🤖 Generated with [Claude Code](https://claude.com/claude-code)
+        EOF
+        )
 
         gh release create "$VERSION" \
           --title "Release $VERSION" \
