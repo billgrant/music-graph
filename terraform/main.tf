@@ -43,6 +43,14 @@ resource "google_compute_instance" "music_graph" {
     }
   }
 
+  service_account {
+    # Uses the default compute engine service account
+    # This enables the VM to authenticate to GCP services via metadata service
+    scopes = [
+      "https://www.googleapis.com/auth/cloud-platform",
+    ]
+  }
+
   metadata = {
     ssh-keys = "${var.ssh_user}:${file(var.ssh_public_key_path)}"
   }
