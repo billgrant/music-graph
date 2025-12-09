@@ -389,9 +389,10 @@ After deployment, run automated checks:
 ## Success Criteria for Phase 7
 
 - ✅ CI pipeline runs tests on every PR and push
-- ⏳ Dev environment mirrors production
-- ⏳ Automatic deployment to dev on merge to main
+- ✅ Dev environment mirrors production
+- ✅ Automatic deployment to dev on merge to main
 - ⏳ Manual deployment to prod with one click
+- ⏳ CI/CD optimization: conditional builds and image retention (Issue #8)
 - ⏳ Database backups automated and tested
 - ⏳ Certbot auto-renewal works without manual intervention
 - ⏳ Rollback procedure documented and tested
@@ -413,11 +414,12 @@ After deployment, run automated checks:
 
 ## Open Questions
 
-1. **Dev Environment**: Separate VM or same VM?
-2. **Database**: How to handle dev data? Copy from prod?
+1. ~~**Dev Environment**: Separate VM or same VM?~~ ✅ Answered: Separate VM
+2. **Database**: How to handle dev data? Copy from prod? Anonymize?
 3. **Certbot**: DNS-01 challenge or firewall automation?
 4. **Deployment Trigger**: Auto to prod or always manual approval?
 5. **Monitoring**: Add health checks and alerting in Phase 7?
+6. **Image Retention**: See Issue #8 for conditional builds and cleanup policy
 
 ## Resources
 
