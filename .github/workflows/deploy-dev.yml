@@ -14,9 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test]  # Only run if tests pass
 
-    outputs:
-      image-tag: ${{ steps.meta.outputs.tags }}
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -40,7 +37,6 @@ jobs:
 
     # Tag with both 'latest' and git SHA
     - name: Tag image
-      id: meta
       run: |
         IMAGE_NAME="gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph"
         GIT_SHA="${{ github.sha }}"
@@ -49,8 +45,6 @@ jobs:
         docker tag music-graph:latest ${IMAGE_NAME}:${GIT_SHA}
         # Tag with 'latest' for convenience
         docker tag music-graph:latest ${IMAGE_NAME}:latest
-
-        echo "tags=${IMAGE_NAME}:${GIT_SHA}" >> $GITHUB_OUTPUT
 
     # Push to GCR
     - name: Push to GCR
