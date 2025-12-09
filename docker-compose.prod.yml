@@ -16,11 +16,10 @@ services:
       retries: 5
 
   web:
-    build: .
+    image: gcr.io/music-graph-479719/music-graph:latest
     env_file:
       - .env.prod
     ports:
-      # - "5000:5000"  # Allow external access temporarily
       - "127.0.0.1:5000:5000"  # Only localhost (Nginx will proxy)
     depends_on:
       db:

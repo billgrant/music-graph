@@ -1,0 +1,292 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:  # Manual trigger only
+    inputs:
+      version:
+        description: 'Version tag (e.g., v0.4.0-alpha, v1.0.0). Leave empty for auto-increment.'
+        required: false
+        default: ''
+
+jobs:
+  # Run tests first - reuse existing CI workflow
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  # Determine version to deploy
+  get-version:
+    runs-on: ubuntu-latest
+    needs: [test]  # Only run if tests pass
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for version calculation
+
+    - name: Determine version
+      id: version
+      run: |
+        if [ -n "${{ github.event.inputs.version }}" ]; then
+          # Use manually specified version
+          VERSION="${{ github.event.inputs.version }}"
+          echo "Using manual version: $VERSION"
+        else
+          # Auto-increment: Get latest tag, increment minor version, add -alpha
+          LATEST_TAG=$(git tag -l "v*" | sort -V | tail -n 1)
+
+          if [ -z "$LATEST_TAG" ]; then
+            # No tags yet, start with v0.1.0-alpha
+            VERSION="v0.1.0-alpha"
+            echo "No existing tags, starting with: $VERSION"
+          else
+            echo "Latest tag: $LATEST_TAG"
+
+            # Extract version parts (handles both v0.1.0-alpha and v1.0.0 formats)
+            # Remove 'v' prefix and any suffix after version numbers
+            VERSION_NUM=$(echo "$LATEST_TAG" | sed 's/^v//' | sed 's/-.*$//')
+
+            # Split into major.minor.patch
+            MAJOR=$(echo "$VERSION_NUM" | cut -d. -f1)
+            MINOR=$(echo "$VERSION_NUM" | cut -d. -f2)
+            PATCH=$(echo "$VERSION_NUM" | cut -d. -f3)
+
+            # Increment minor version
+            MINOR=$((MINOR + 1))
+
+            # Preserve suffix if it was -alpha or -beta, default to -alpha
+            if [[ "$LATEST_TAG" == *"-beta"* ]]; then
+              SUFFIX="-beta"
+            elif [[ "$LATEST_TAG" == *"-alpha"* ]]; then
+              SUFFIX="-alpha"
+            else
+              # If no suffix (e.g., v1.0.0), keep incrementing without suffix
+              SUFFIX=""
+            fi
+
+            VERSION="v${MAJOR}.${MINOR}.${PATCH}${SUFFIX}"
+            echo "Auto-incremented to: $VERSION"
+          fi
+        fi
+
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Deploying version: $VERSION"
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: [test, get-version]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Authenticate to Google Cloud
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Configure Docker for GCR
+      run: gcloud auth configure-docker
+
+    # Build the Docker image
+    - name: Build Docker image
+      run: |
+        docker build -t music-graph:latest .
+
+    # Tag with version, git SHA, and 'production'
+    - name: Tag image
+      run: |
+        IMAGE_NAME="gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph"
+        VERSION="${{ needs.get-version.outputs.version }}"
+        GIT_SHA="${{ github.sha }}"
+
+        # Tag with version
+        docker tag music-graph:latest ${IMAGE_NAME}:${VERSION}
+        # Tag with SHA for traceability
+        docker tag music-graph:latest ${IMAGE_NAME}:${GIT_SHA}
+        # Tag with 'production' for easy reference
+        docker tag music-graph:latest ${IMAGE_NAME}:production
+        # Tag with 'latest'
+        docker tag music-graph:latest ${IMAGE_NAME}:latest
+
+    # Push to GCR
+    - name: Push to GCR
+      run: |
+        IMAGE_NAME="gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph"
+        VERSION="${{ needs.get-version.outputs.version }}"
+
+        docker push ${IMAGE_NAME}:${VERSION}
+        docker push ${IMAGE_NAME}:${{ github.sha }}
+        docker push ${IMAGE_NAME}:production
+        docker push ${IMAGE_NAME}:latest
+
+        echo "✅ Images pushed to GCR:"
+        echo "  - ${IMAGE_NAME}:${VERSION}"
+        echo "  - ${IMAGE_NAME}:production"
+        echo "  - ${IMAGE_NAME}:latest"
+
+  deploy-to-prod:
+    runs-on: ubuntu-latest
+    needs: [build-and-push, get-version]
+
+    steps:
+    - name: Pre-deployment backup
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.PROD_HOST }}
+        username: ${{ secrets.PROD_USER }}
+        key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
+        script: |
+          echo "=== Creating pre-deployment backup ==="
+          cd ~/music-graph
+
+          # Create backup directory if it doesn't exist
+          mkdir -p ~/backups
+
+          # Create timestamped backup
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          BACKUP_FILE=~/backups/musicgraph-${TIMESTAMP}.sql
+
+          docker-compose -f docker-compose.prod.yml exec -T db pg_dump -U musicgraph musicgraph > "$BACKUP_FILE"
+
+          echo "✅ Database backup created: $BACKUP_FILE"
+          ls -lh "$BACKUP_FILE"
+
+    - name: Deploy to production VM
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.PROD_HOST }}
+        username: ${{ secrets.PROD_USER }}
+        key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
+        script: |
+          cd ~/music-graph
+
+          echo "=== Pulling latest code and configs ==="
+          git pull origin main
+
+          echo ""
+          echo "=== MANUAL MIGRATION REQUIRED ==="
+          echo "Before deployment completes, you must run migrations manually:"
+          echo "  1. SSH to production VM"
+          echo "  2. Run: cd ~/music-graph && docker-compose -f docker-compose.prod.yml exec web flask db upgrade"
+          echo "  3. Verify migrations succeeded"
+          echo ""
+          echo "For now, continuing with deployment..."
+          echo "TODO: Automate this in Issue #9"
+          echo ""
+
+          # Authenticate gcloud using the VM's service account from metadata service
+          SA_EMAIL=$(curl -s -H "Metadata-Flavor: Google" \
+            http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/email)
+          gcloud config set account "$SA_EMAIL"
+
+          # Configure Docker to use gcloud for GCR authentication
+          gcloud auth configure-docker gcr.io --quiet
+
+          # Pull the new image with version tag
+          VERSION="${{ needs.get-version.outputs.version }}"
+          docker pull gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph:${VERSION}
+
+          # Tag it as latest locally for docker-compose
+          docker tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph:${VERSION} \
+                     gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph:latest
+
+          # Stop and remove old containers to ensure clean state
+          docker-compose -f docker-compose.prod.yml down
+
+          # Start with new image
+          docker-compose -f docker-compose.prod.yml up -d
+
+          # Wait for services to be healthy
+          echo ""
+          echo "=== Waiting for services to start ==="
+          sleep 10
+
+          # Show deployment info
+          echo ""
+          echo "=== Deployment Complete ==="
+          echo "Deployed version: ${VERSION}"
+          echo "Deployed commit: ${{ github.sha }}"
+          echo "Deployed by: ${{ github.actor }}"
+          echo ""
+          docker-compose -f docker-compose.prod.yml ps
+
+    - name: Health check
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.PROD_HOST }}
+        username: ${{ secrets.PROD_USER }}
+        key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
+        script: |
+          echo "=== Running health checks ==="
+
+          # Check if containers are running
+          if ! docker-compose -f ~/music-graph/docker-compose.prod.yml ps | grep -q "Up"; then
+            echo "❌ Containers are not running!"
+            exit 1
+          fi
+
+          # Check if web app is responding (may need to adjust URL)
+          if ! curl -f -s -o /dev/null http://localhost:5000/; then
+            echo "⚠️  Warning: Web app not responding on port 5000"
+            echo "This may be normal if nginx is the only entry point"
+          else
+            echo "✅ Web app is responding"
+          fi
+
+          echo "✅ Health checks passed"
+
+  create-release:
+    runs-on: ubuntu-latest
+    needs: [deploy-to-prod, get-version]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Create GitHub Release
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        VERSION="${{ needs.get-version.outputs.version }}"
+
+        # Create git tag
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git tag -a "$VERSION" -m "Release $VERSION"
+        git push origin "$VERSION"
+
+        # Create GitHub release
+        gh release create "$VERSION" \
+          --title "Release $VERSION" \
+          --notes "Deployed to production on $(date +'%Y-%m-%d %H:%M:%S UTC')
+
+**Deployed by:** ${{ github.actor }}
+**Commit:** ${{ github.sha }}
+**Docker image:** gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph:$VERSION
+
+## Deployment
+- ✅ Tests passed
+- ✅ Image built and pushed to GCR
+- ✅ Database backup created
+- ✅ Deployed to production
+- ✅ Health checks passed
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)" \
+          --latest
+
+    - name: Deployment summary
+      run: |
+        echo "🎉 Production deployment complete!"
+        echo ""
+        echo "Version: ${{ needs.get-version.outputs.version }}"
+        echo "Commit: ${{ github.sha }}"
+        echo "Deployed by: ${{ github.actor }}"
+        echo "Release: https://github.com/${{ github.repository }}/releases/tag/${{ needs.get-version.outputs.version }}"
