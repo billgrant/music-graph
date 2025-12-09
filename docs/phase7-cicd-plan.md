@@ -276,35 +276,189 @@ docker-compose -f docker-compose.dev.yml ps
 - GitHub Actions: https://github.com/billgrant/music-graph/actions
 - GCR Images: https://console.cloud.google.com/gcr/images/music-graph-479719
 
-## Phase 4: Production Deployment (Final Step)
+## Phase 4: Production Deployment ✅ (Complete)
 
-### Manual Promotion
+### What We Built
 
-Create `.github/workflows/deploy-prod.yml`:
-- **Triggered manually** via workflow_dispatch
-- Requires approval/confirmation
-- Promotes tested dev image to production
-- Creates GitHub release/tag
-- Rollback capability
+1. **Production Deployment Workflow**
+   - `.github/workflows/deploy-prod.yml`
+   - Manual trigger only (workflow_dispatch) for production safety
+   - Auto-increment version tagging with manual override
+   - Deploys using `docker-compose.prod.yml`
 
-### Deployment Process
+2. **Flask-Migrate for Database Migrations**
+   - Added `flask-migrate==4.0.5` to requirements.txt
+   - Configured Flask-Migrate in app.py
+   - Manual migrations during deployment (Issue #9 for automation)
+   - Migration documentation in production-operations.md
 
-1. Changes merge to main
-2. CI runs automatically
-3. If CI passes, auto-deploy to dev
-4. Test in dev environment
-5. Manually trigger prod deployment when ready
-6. Prod deployment uses same Docker image as dev
+3. **Version Management System**
+   - Auto-increment: v0.x.0-alpha (e.g., v0.1.0-alpha → v0.2.0-alpha)
+   - Manual override for version changes (alpha → beta → release)
+   - Multi-tag strategy: version + SHA + production + latest
+   - GitHub releases created automatically with deployment notes
 
-### Rollback Strategy
+4. **Pre-Deployment Backups**
+   - Automatic database backup before each deployment
+   - Saved to `~/backups/` on production VM
+   - Timestamped: `musicgraph-YYYYMMDD-HHMMSS.sql`
+   - Used for rollback if needed
+
+5. **Production Docker Compose**
+   - `docker-compose.prod.yml` configured for production
+   - Uses GCR images (not local builds)
+   - Uses `.env.prod` for secrets
+   - Restart policies and health checks
+
+6. **Comprehensive Documentation**
+   - `docs/production-operations.md` - Complete operations guide
+   - Migration procedures (create, run, rollback)
+   - Deployment process step-by-step
+   - Rollback procedures (quick, full, migration-only)
+   - Emergency procedures
+   - `.env.prod.example` for production secrets
+
+### How Production Deployment Works
+
+**Trigger:** Manual workflow dispatch from GitHub Actions
+
+**Workflow Steps:**
+
+1. **Run Tests** - Reuses CI workflow
+2. **Determine Version**
+   - Auto-increment from latest tag, OR
+   - Use manually specified version
+   - Preserves suffix (alpha/beta) or removes for release
+
+3. **Build and Push**
+   - Build Docker image
+   - Tag with: version, git SHA, 'production', 'latest'
+   - Push all tags to GCR
+
+4. **Pre-Deployment Backup**
+   - SSH to prod VM
+   - Create timestamped database backup
+   - Save to ~/backups/
+
+5. **Deploy to Production**
+   - Pull latest code (git pull)
+   - **Display migration reminder** (manual step)
+   - Authenticate gcloud via metadata service
+   - Pull versioned image from GCR
+   - Tag as 'latest' locally
+   - Stop old containers
+   - Start new containers with `docker-compose.prod.yml`
+
+6. **Health Checks**
+   - Verify containers are running
+   - Test web app response
+   - Report status
+
+7. **Create GitHub Release**
+   - Create git tag with version
+   - Push tag to GitHub
+   - Create release with deployment notes
+   - Mark as latest release
+
+### Version Examples
+
+```
+v0.1.0-alpha  (Phase 1 - CI Setup)
+v0.2.0-alpha  (Phase 2 - Dev Environment)
+v0.3.0-alpha  (Phase 3 - Dev Deployment)
+v0.4.0-alpha  (Phase 4 - Prod Deployment)
+...
+v0.10.0-beta  (Manual override to switch to beta)
+v0.11.0-beta  (Auto-increment continues with beta)
+...
+v1.0.0        (Manual override for first release)
+```
+
+### Manual Migration Process
+
+During deployment, migrations must be run manually:
 
 ```bash
-# Tag images with git commit SHA
-docker tag music-graph:latest gcr.io/PROJECT/music-graph:${GITHUB_SHA}
+# 1. SSH to production VM
+ssh user@prod-vm
 
-# Can rollback to any previous SHA
-docker pull gcr.io/PROJECT/music-graph:abc123
+# 2. Navigate to project
+cd ~/music-graph
+
+# 3. Run migrations
+docker-compose -f docker-compose.prod.yml exec web flask db upgrade
+
+# 4. Verify success
+docker-compose -f docker-compose.prod.yml exec web flask db current
 ```
+
+**Why manual?**
+- Full control and visibility (good for learning)
+- Can inspect database changes before proceeding
+- Easy to rollback if issues arise
+- Automated in future (Issue #9)
+
+### Rollback Procedures
+
+**Quick Rollback (Application Only):**
+```bash
+# Checkout previous version
+git checkout <previous-commit>
+
+# Pull previous image
+docker pull gcr.io/music-graph-479719/music-graph:v0.3.0-alpha
+docker tag gcr.io/music-graph-479719/music-graph:v0.3.0-alpha \
+           gcr.io/music-graph-479719/music-graph:latest
+
+# Restart
+docker-compose -f docker-compose.prod.yml down
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+**Full Rollback (Application + Database):**
+```bash
+# Stop application
+docker-compose -f docker-compose.prod.yml stop web
+
+# Restore database from backup
+BACKUP_FILE=$(ls -t ~/backups/musicgraph-*.sql | head -1)
+docker-compose -f docker-compose.prod.yml exec -T db \
+  psql -U musicgraph musicgraph < "$BACKUP_FILE"
+
+# Rollback code and restart
+git checkout <previous-commit>
+docker pull gcr.io/music-graph-479719/music-graph:v0.3.0-alpha
+docker tag gcr.io/music-graph-479719/music-graph:v0.3.0-alpha \
+           gcr.io/music-graph-479719/music-graph:latest
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+See `docs/production-operations.md` for complete rollback procedures.
+
+### Current State
+
+**Production Deployment:**
+- ✅ Manual trigger workflow configured
+- ✅ Auto-increment versioning with override
+- ✅ Pre-deployment backups automated
+- ✅ Flask-Migrate configured
+- ✅ Manual migration process documented
+- ✅ Rollback procedures documented
+- ✅ GitHub releases created automatically
+- ✅ Multi-tag image strategy
+
+**Documentation:**
+- ✅ Production operations guide (migrations, deployment, rollback, emergency)
+- ✅ .env.prod.example for secrets template
+
+**Ready for first production deployment!**
+
+**Next Steps:**
+1. Set up production VM (similar to dev setup)
+2. Configure `.env.prod` with production secrets
+3. Initialize Flask-Migrate on prod VM
+4. Run first production deployment
+5. Verify and test
 
 ## Database Backups
 
