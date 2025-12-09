@@ -3,6 +3,7 @@ from config import Config
 from models import db, Genre, Band, User
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_migrate import Migrate
 from functools import wraps
 
 
@@ -15,6 +16,9 @@ app.config['SECRET_KEY'] = 'dev-secret-key-change-in-production'  # We'll make t
 
 # Initialize database
 db.init_app(app)
+
+# Initialize Flask-Migrate
+migrate = Migrate(app, db)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
