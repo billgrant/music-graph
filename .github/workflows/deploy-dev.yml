@@ -73,6 +73,9 @@ jobs:
         script: |
           cd ~/music-graph
 
+          # Pull latest code and configs
+          git pull origin main
+
           # Authenticate gcloud using the VM's service account from metadata service
           SA_EMAIL=$(curl -s -H "Metadata-Flavor: Google" \
             http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/email)
