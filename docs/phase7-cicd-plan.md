@@ -1,8 +1,8 @@
 # Phase 7: CI/CD and DevOps - Implementation Plan
 
-**Status:** Phase 1 & 2 Complete (CI Setup + Dev Environment)
+**Status:** Phase 1, 2 & 3 Complete (CI + Dev Environment + Automated Deployment)
 **Date:** December 8, 2025
-**Last Updated:** December 8, 2025
+**Last Updated:** December 9, 2025
 
 ## Overview
 
@@ -12,7 +12,7 @@ Phase 7 focuses on implementing automated testing, continuous integration, and c
 
 - ✅ GitHub Actions for automated testing
 - ✅ Separate dev/staging environment
-- ⏳ Automated deployment to dev
+- ✅ Automated deployment to dev
 - ⏳ Manual/automated promotion to production
 - ⏳ Database backup strategies
 - ⏳ Fix certbot auto-renewal with IP restrictions
@@ -138,108 +138,143 @@ Before pushing these changes:
 - `docs/terraform-workspace-guide.md` - Workspace management reference
 - Updated `docker-compose.dev.yml` and `.env.dev.example`
 
-## Phase 3: CD to Dev (Next)
+## Phase 3: Automated Deployment to Dev ✅ (Complete)
 
-### Infrastructure Requirements
+### What We Built
 
-1. **GCP Resources Needed**
-   - New Compute Engine VM for dev environment
-   - Or: Separate docker-compose stack on existing VM
-   - Consider: Cloud SQL instance or separate PostgreSQL container
+1. **GitHub Actions Deployment Workflow**
+   - `.github/workflows/deploy-dev.yml`
+   - Triggers on push to main branch or manual trigger
+   - Three jobs: test → build-and-push → deploy-to-dev
+   - Reuses CI workflow for testing (DRY principle)
 
-2. **Configuration Files to Create**
-   - `docker-compose.dev.yml` - Dev environment compose file
-   - `.env.dev` - Dev environment variables
-   - Terraform updates for dev infrastructure (if separate VM)
+2. **Google Container Registry (GCR) Integration**
+   - Enabled Artifact Registry API in GCP
+   - Created service account with `artifactregistry.writer` permission
+   - Configured GitHub Actions authentication via service account key
+   - Images tagged with both git SHA and 'latest' for traceability
 
-3. **Domain/Networking**
-   - Subdomain: `dev.music-graph.billgrant.io`
-   - Nginx configuration for dev
-   - SSL certificate for dev subdomain
-   - Firewall rules (same IP restrictions as prod)
+3. **VM Service Account Configuration**
+   - Added `service_account` block to Terraform configuration
+   - Attached default compute engine service account to VMs
+   - Granted `artifactregistry.reader` permission for pulling images
+   - Configured `cloud-platform` scope for full GCP API access
 
-### Implementation Steps
-
-1. **Option A: Separate VM (Recommended)**
-   ```bash
-   # Terraform changes needed:
-   # - Add dev VM resource
-   # - Add firewall rules for dev
-   # - Add load balancer if needed
-
-   terraform/
-   ├── main.tf           # Add dev VM
-   ├── network.tf        # Add dev firewall rules
-   └── outputs.tf        # Add dev VM outputs
+4. **Automated Deployment Process**
+   ```
+   Push to main → CI tests → Build image → Push to GCR → Deploy to VM
    ```
 
-2. **Option B: Same VM, Separate Stack**
-   ```bash
-   # On existing VM, run dev stack on different ports
-   # Nginx routes dev.music-graph.billgrant.io to dev stack
+   On the VM:
+   - Pull latest code and configs with `git pull`
+   - Authenticate gcloud via metadata service
+   - Configure Docker to use gcloud credential helper
+   - Pull latest image from GCR
+   - Stop and remove old containers
+   - Start fresh containers with new image
 
-   docker-compose.dev.yml:
-   ports:
-     - "127.0.0.1:5001:5000"  # Different port
-   ```
+### Issues Encountered and Fixed
 
-3. **Database Strategy**
-   - Dev needs its own PostgreSQL instance
-   - Separate database or separate container
-   - Consider periodic copy of prod data to dev (anonymized)
+1. **CI Workflow Not Reusable**
+   - Problem: deploy-dev.yml tried to call ci.yml but got error
+   - Solution: Added `workflow_call:` trigger to ci.yml
+   - Learning: Workflows need explicit trigger to be callable
 
-## Phase 3: CD to Dev (After Phase 2)
+2. **GCR Authentication in GitHub Actions**
+   - Problem: gcloud CLI not authenticated in GitHub Actions runner
+   - Solution: Use `google-github-actions/auth@v2` before setup-gcloud
+   - Learning: Order of operations matters for GCP authentication
 
-### Workflow Design
+3. **Artifact Registry API Not Enabled**
+   - Problem: Push to GCR failed with "API has not been used" error
+   - Solution: Enabled Artifact Registry API in GCP console
+   - Learning: GCR now uses Artifact Registry backend
 
-Create `.github/workflows/deploy-dev.yml`:
+4. **Service Account Missing Permissions**
+   - Problem: Permission denied when pushing to GCR
+   - Solution: Granted `artifactregistry.writer` role to service account
+   - Learning: Need explicit IAM permissions even with service account
 
-```yaml
-name: Deploy to Dev
+5. **VM Can't Pull from GCR - No Service Account**
+   - Problem: Metadata service returned 404 for service account
+   - Solution: Added `service_account` block to Terraform VM configuration
+   - Learning: VMs don't automatically have service accounts attached
+   - Root cause: This was the core issue preventing all authentication
 
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:  # Manual trigger option
+6. **VM Can't Pull from GCR - Missing Reader Permission**
+   - Problem: Unauthenticated request errors when pulling
+   - Solution: Granted `artifactregistry.reader` to compute service account
+   - Learning: VMs need explicit read permissions to GCR
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    needs: [test]  # Run after CI passes
+7. **Metadata Service URL Resolution**
+   - Problem: `metadata.google.internal` hostname not resolving
+   - Solution: Use IP address `169.254.169.254` directly
+   - Learning: Link-local metadata IP is more reliable than hostname
 
-    steps:
-      - Build Docker image
-      - Push to Google Container Registry (GCR)
-      - SSH to dev VM
-      - Pull latest image
-      - Restart containers
-      - Run database migrations if needed
-      - Health check
-```
+8. **Container Using Old Locally-Built Image**
+   - Problem: Containers recreated but still used locally-built image
+   - Solution: Added `git pull` to sync latest docker-compose.dev.yml
+   - Learning: VM had outdated compose file that specified `build: .`
+   - Fix: Pull code before deployment to ensure configs are current
 
-### Secrets Configuration
+### How Automated Deployment Works
 
-GitHub repository secrets needed:
-- `GCP_SA_KEY` - Service account for GCR
-- `GCP_PROJECT_ID` - Your GCP project
-- `DEV_SSH_PRIVATE_KEY` - SSH key for dev VM
-- `DEV_HOST` - Dev VM IP or hostname
-- `PROD_SSH_PRIVATE_KEY` - SSH key for prod VM
-- `PROD_HOST` - Prod VM IP or hostname
+**Trigger:** Push to main or manual workflow dispatch
 
-### Docker Registry Setup
+**Job 1: Test**
+- Reuses `.github/workflows/ci.yml`
+- Runs flake8 linting and pytest tests
+- Uploads coverage reports
 
+**Job 2: Build and Push**
+- Checks out code
+- Authenticates to GCP with service account
+- Builds Docker image
+- Tags with git SHA and 'latest'
+- Pushes both tags to GCR
+
+**Job 3: Deploy to Dev**
+- SSHs to dev VM
+- Pulls latest code (`git pull origin main`)
+- Authenticates gcloud using VM's service account from metadata service
+- Configures Docker to use gcloud credential helper
+- Pulls latest image from GCR
+- Stops and removes old containers (`docker-compose down`)
+- Starts fresh containers (`docker-compose up -d`)
+- Shows deployment status
+
+### GitHub Secrets Configuration
+
+Required repository secrets:
+- `GCP_SA_KEY` - Service account JSON key for GCR access
+- `GCP_PROJECT_ID` - GCP project ID (music-graph-479719)
+- `DEV_SSH_PRIVATE_KEY` - SSH private key for dev VM
+- `DEV_HOST` - Dev VM IP address (34.139.187.195)
+- `DEV_USER` - SSH username for dev VM
+
+### Current State
+
+**Automated Deployment:**
+- ✅ Fully functional end-to-end deployment
+- ✅ Deploys on every push to main
+- ✅ Can also be triggered manually
+- ✅ Uses GCR images (not locally built)
+- ✅ Proper authentication via metadata service
+- ✅ Clean container recreation on each deploy
+
+**Verification:**
 ```bash
-# Enable Container Registry in GCP
-gcloud services enable containerregistry.googleapis.com
+# On dev VM, verify containers are using GCR image:
+docker-compose -f docker-compose.dev.yml ps
 
-# Configure Docker to use GCR
-gcloud auth configure-docker
-
-# Tag and push images
-docker tag music-graph:latest gcr.io/YOUR-PROJECT/music-graph:latest
-docker push gcr.io/YOUR-PROJECT/music-graph:latest
+# Should show:
+# music-graph-web-1   gcr.io/music-graph-479719/music-graph:latest
 ```
+
+**URLs:**
+- Dev site: https://dev.music-graph.billgrant.io
+- GitHub Actions: https://github.com/billgrant/music-graph/actions
+- GCR Images: https://console.cloud.google.com/gcr/images/music-graph-479719
 
 ## Phase 4: Production Deployment (Final Step)
 
