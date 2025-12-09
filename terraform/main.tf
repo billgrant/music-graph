@@ -25,6 +25,7 @@ resource "google_compute_instance" "music_graph" {
   name         = "${var.environment}-music-graph"
   machine_type = var.machine_type
   zone         = var.zone
+  allow_stopping_for_update = true
 
   tags = ["http-server", "https-server", "music-graph-${var.environment}"]
 
