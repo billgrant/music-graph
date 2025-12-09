@@ -213,6 +213,9 @@ __marimo__/
 .env.prod
 .env.dev
 .env.*
+# But allow example files
+!.env.*.example
+!.env.example
 
 # Terraform
 terraform/.terraform/
