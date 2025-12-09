@@ -84,9 +84,11 @@ jobs:
           # Pull the new image
           docker pull gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph:latest
 
-          # Restart containers with new image (force recreate to pick up new image)
-          docker-compose -f docker-compose.dev.yml pull
-          docker-compose -f docker-compose.dev.yml up -d --force-recreate
+          # Stop and remove old containers to ensure clean state
+          docker-compose -f docker-compose.dev.yml down
+
+          # Start with new image
+          docker-compose -f docker-compose.dev.yml up -d
 
           # Show deployment info
           echo "=== Deployment Complete ==="
