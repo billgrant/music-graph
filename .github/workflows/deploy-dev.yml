@@ -73,6 +73,11 @@ jobs:
         script: |
           cd ~/music-graph
 
+          # Authenticate gcloud using the VM's service account from metadata service
+          SA_EMAIL=$(curl -s -H "Metadata-Flavor: Google" \
+            http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email)
+          gcloud config set account "$SA_EMAIL"
+
           # Configure Docker to use gcloud for GCR authentication
           gcloud auth configure-docker gcr.io --quiet
 
