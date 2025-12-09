@@ -254,6 +254,9 @@ jobs:
     - name: Create GitHub Release
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        ACTOR: ${{ github.actor }}
+        COMMIT: ${{ github.sha }}
+        PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       run: |
         VERSION="${{ needs.get-version.outputs.version }}"
 
@@ -264,13 +267,11 @@ jobs:
         git push origin "$VERSION"
 
         # Create GitHub release
-        gh release create "$VERSION" \
-          --title "Release $VERSION" \
-          --notes "Deployed to production on $(date +'%Y-%m-%d %H:%M:%S UTC')
+        RELEASE_NOTES="Deployed to production on $(date +'%Y-%m-%d %H:%M:%S UTC')
 
-**Deployed by:** ${{ github.actor }}
-**Commit:** ${{ github.sha }}
-**Docker image:** gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph:$VERSION
+**Deployed by:** ${ACTOR}
+**Commit:** ${COMMIT}
+**Docker image:** gcr.io/${PROJECT_ID}/music-graph:${VERSION}
 
 ## Deployment
 - ✅ Tests passed
@@ -279,7 +280,11 @@ jobs:
 - ✅ Deployed to production
 - ✅ Health checks passed
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code)" \
+🤖 Generated with [Claude Code](https://claude.com/claude-code)"
+
+        gh release create "$VERSION" \
+          --title "Release $VERSION" \
+          --notes "$RELEASE_NOTES" \
           --latest
 
     - name: Deployment summary
