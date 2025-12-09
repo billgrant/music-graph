@@ -1,0 +1,88 @@
+name: Deploy to Dev
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allows manual trigger from GitHub UI
+
+jobs:
+  # Run tests first - reuse existing CI workflow
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: [test]  # Only run if tests pass
+
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # Authenticate to Google Cloud
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+    - name: Authenticate to GCR
+      run: |
+        echo '${{ secrets.GCP_SA_KEY }}' | base64 -d > ${HOME}/gcp-key.json
+        gcloud auth activate-service-account --key-file=${HOME}/gcp-key.json
+        gcloud auth configure-docker
+
+    # Build the Docker image
+    - name: Build Docker image
+      run: |
+        docker build -t music-graph:latest .
+
+    # Tag with both 'latest' and git SHA
+    - name: Tag image
+      id: meta
+      run: |
+        IMAGE_NAME="gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph"
+        GIT_SHA="${{ github.sha }}"
+
+        # Tag with SHA for traceability
+        docker tag music-graph:latest ${IMAGE_NAME}:${GIT_SHA}
+        # Tag with 'latest' for convenience
+        docker tag music-graph:latest ${IMAGE_NAME}:latest
+
+        echo "tags=${IMAGE_NAME}:${GIT_SHA}" >> $GITHUB_OUTPUT
+
+    # Push to GCR
+    - name: Push to GCR
+      run: |
+        IMAGE_NAME="gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph"
+        docker push ${IMAGE_NAME}:${{ github.sha }}
+        docker push ${IMAGE_NAME}:latest
+
+  deploy-to-dev:
+    runs-on: ubuntu-latest
+    needs: [build-and-push]
+
+    steps:
+    - name: Deploy to dev VM
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.DEV_HOST }}
+        username: ${{ secrets.DEV_USER }}
+        key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+        script: |
+          cd ~/music-graph
+
+          # Pull the new image
+          docker pull gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph:latest
+
+          # Restart containers with new image
+          docker-compose -f docker-compose.dev.yml pull
+          docker-compose -f docker-compose.dev.yml up -d
+
+          # Show deployment info
+          echo "=== Deployment Complete ==="
+          echo "Deployed commit: ${{ github.sha }}"
+          echo "Deployed by: ${{ github.actor }}"
+          echo ""
+          docker-compose -f docker-compose.dev.yml ps
