@@ -1,6 +1,6 @@
 # Music Graph Project - Claude Context
 
-**Last Updated:** December 8, 2025 (Phase 7 - Phases 1 & 2 Complete)
+**Last Updated:** December 11, 2025 (Phase 7 Complete ✅)
 
 ## Project Overview
 
@@ -19,7 +19,19 @@ Music Graph is a Flask web application that visualizes music genre hierarchies a
 - GitHub Actions for CI/CD
 - GitHub for version control
 
-## Current Phase: Phase 7 (In Progress)
+## Current Phase: Phase 8 (Planning)
+
+**Focus:** UI/UX Improvements Based on User Feedback (See Issue #14)
+
+**User Requests from Aidan:**
+- Sort genre list alphabetically and add search/filter
+- Make genre selection boxes bigger
+- Size nodes by hierarchy (root=large, intermediate=medium, leaf=small)
+- Add contact information to footer
+
+**Future Phase:** Infrastructure Modernization (Issue #10) - Remote state, Gunicorn, Packer, secrets management
+
+## Previous Phase: Phase 7 (Complete ✅)
 
 **Focus:** CI/CD and DevOps
 
@@ -28,12 +40,13 @@ Music Graph is a Flask web application that visualizes music genre hierarchies a
 - ✅ Separate dev environment with own VM and database
 - ✅ Test suite (17 tests, all passing)
 - ✅ Code coverage and linting in CI
-
-**Next:**
-- ⏳ Automated deployment to dev on push to main
-- ⏳ Manual promotion to production
-- ⏳ Database backup strategies
-- ⏳ Fix certbot auto-renewal with IP restrictions
+- ✅ Automated deployment to dev on push to main
+- ✅ Manual promotion to production with versioning
+- ✅ CI/CD optimization (Issue #8): Path filters, image tagging, GCR lifecycle policy, Docker cleanup
+- ✅ Terraform restructure: environments/ and project/ separation
+- ✅ Database backup system: Daily automated backups to GCS, 7-day retention, tested restore procedure
+- ✅ SSL/Certbot: Switched to Route53 DNS-01 challenge for auto-renewal (no port 80 required)
+- ✅ AWS IAM integration: Terraform-managed IAM user/policy for certbot Route53 access
 
 **Previous Phase:** Phase 6 (Complete) - Multiple parent genres support
 

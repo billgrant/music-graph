@@ -6,9 +6,20 @@ An interactive web application that visualizes music genres and bands as a conne
 
 Create a visual map showing how music genres relate to each other and which bands belong to which genres. Users can explore genre relationships and discover bands within each style of music.
 
-## Current Phase: Phase 7 - CI/CD and DevOps (Planning)
+## Current Phase: Phase 8 - UI/UX Improvements (Planning)
 
-Planning automated deployment pipeline and development workflow improvements.
+Focus on user experience improvements based on feedback from Aidan (primary user).
+
+### Phase 7 Summary (Complete ✅)
+Phase 7 implemented production-ready CI/CD and DevOps practices:
+- GitHub Actions CI/CD pipeline (automated testing, deployment)
+- Separate dev environment (own VM, database, subdomain)
+- Path filters and image tagging optimization (Issue #8)
+- GCR lifecycle policy for automatic cleanup
+- Database backup system (GCS, 7-day retention, tested restore)
+- SSL auto-renewal via Route53 DNS-01 challenge
+- AWS IAM integration for certbot Route53 access
+- Terraform restructure (environments/ and project/ separation)
 
 ### Phase 6 Summary (Complete ✅)
 Phase 6 added multiple parent genre support:
@@ -157,31 +168,50 @@ Phase 4 successfully added authentication and authorization:
 - Google Cloud Platform (Compute Engine)
 - Terraform for infrastructure as code
 
+**Current:**
+- GitHub Actions for CI/CD and deployments
+- Google Cloud Storage for database backups
+- AWS Route53 for DNS and certbot DNS-01 validation
+- AWS IAM for certbot credentials
+
 **Future Additions:**
-- GitHub Actions CI/CD
 - Monitoring (Prometheus/Grafana or Cloud Monitoring)
 - Centralized logging
 - Cloud SQL managed database
 - REST API
+- Packer images for immutable infrastructure
+- GCP Secret Manager for secrets management
 
 ---
 
 ## Roadmap
 
-### Phase 6: CI/CD and DevOps (Next)
-**Goal:** Automate deployments and improve development workflow
+### Phase 8: UI/UX Improvements (In Progress)
+**Goal:** Improve user experience based on Aidan's feedback
 
 **Planned:**
-- GitHub Actions for automated testing and deployment
-- Separate dev environment (test without breaking prod)
-- Database backup strategy and restore procedures
-- Monitoring and logging infrastructure
-- Fix certbot auto-renewal for IP-restricted firewall
-- Automated container rebuilds on code changes
+- Sort genre lists alphabetically
+- Add search/filter for genres
+- Increase genre selection box size
+- Size graph nodes by hierarchy (root=large, intermediate=medium, leaf=small)
+- Add contact information footer
 
-**Why:** Enable continuous feature development without disrupting Aidan's usage
+**Why:** Direct user feedback from primary user - these improvements directly impact usability
 
-### Phase 7: Monitoring and Observability
+### Phase 9: Infrastructure Modernization
+**Goal:** Production-grade infrastructure with immutable deployments
+
+**Planned:**
+- Remote Terraform state (GCS backend with locking)
+- Replace Flask dev server with Gunicorn (Issue #2)
+- Immutable infrastructure with Packer images (Issue #7)
+- Remove static secrets from repository (Issue #12)
+- Import DNS records to Terraform (Issue #11)
+- Evaluate Cloud SQL vs Docker PostgreSQL
+
+**Why:** Reproducible infrastructure, better secrets management, production-ready WSGI server
+
+### Phase 10: Monitoring and Observability
 **Goal:** Understand application health and usage
 
 **Planned:**
@@ -286,6 +316,9 @@ This project is documented on my blog at [billgrant.io](https://billgrant.io).
 
 **Phase 6 Posts:**
 - [Multiple Parent Genres](https://billgrant.io/2025/12/08/phase-6-multiple-parent-genres/) - Many-to-many parent relationships
+
+**Phase 7 Posts:**
+- [CI/CD and Production DevOps](https://billgrant.io/2025/12/11/phase-7-cicd-devops/) - GitHub Actions, database backups, SSL auto-renewal
 
 **Workflow Posts:**
 - [Upgrading My AI Workflow with MCP](https://billgrant.io/2025/12/07/mcp-setup/) - Model Context Protocol setup for better file access
