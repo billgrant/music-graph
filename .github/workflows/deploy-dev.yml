@@ -93,6 +93,9 @@ jobs:
           # Configure Docker to use gcloud for GCR authentication
           gcloud auth configure-docker gcr.io --quiet
 
+          # Clean up old Docker images to prevent disk space issues
+          docker image prune -a -f --filter "until=48h"
+
           # Pull the new dev image
           docker pull gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph:dev-latest
 
