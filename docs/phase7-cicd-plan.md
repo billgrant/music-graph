@@ -1,8 +1,8 @@
 # Phase 7: CI/CD and DevOps - Implementation Plan
 
-**Status:** Phase 1, 2 & 3 Complete (CI + Dev Environment + Automated Deployment)
+**Status:** Phase 1, 2, 3 & 4 Complete (CI + Dev + Production Deployment)
 **Date:** December 8, 2025
-**Last Updated:** December 9, 2025
+**Last Updated:** December 10, 2025
 
 ## Overview
 
@@ -13,8 +13,8 @@ Phase 7 focuses on implementing automated testing, continuous integration, and c
 - ✅ GitHub Actions for automated testing
 - ✅ Separate dev/staging environment
 - ✅ Automated deployment to dev
-- ⏳ Manual/automated promotion to production
-- ⏳ Database backup strategies
+- ✅ Manual promotion to production with versioning
+- ⏳ Database backup strategies (daily backups, retention policies)
 - ⏳ Fix certbot auto-renewal with IP restrictions
 
 ## Phase 1: CI Setup ✅ (Complete)
@@ -360,6 +360,35 @@ docker-compose -f docker-compose.dev.yml ps
    - Create release with deployment notes
    - Mark as latest release
 
+### Prerequisites for Production Deployment
+
+Before running the production deployment workflow, ensure:
+
+1. **GitHub Secrets Configured**
+   - `PROD_HOST` - Production VM hostname (e.g., music-graph.billgrant.io)
+   - `PROD_USER` - SSH username for production VM
+   - `PROD_SSH_PRIVATE_KEY` - SSH private key for authentication
+   - `GCP_SA_KEY` - Service account JSON key (already set up for dev)
+   - `GCP_PROJECT_ID` - GCP project ID (already set up for dev)
+
+2. **SSH Key Setup**
+   ```bash
+   # Copy public key to production VM
+   ssh-copy-id -i ~/.ssh/music-graph-deploy.pub user@production-vm
+   ```
+
+3. **GitHub Actions Permissions**
+   - Go to: Settings → Actions → General → Workflow permissions
+   - Select: "Read and write permissions"
+   - Required for: Creating git tags and GitHub releases
+
+4. **Production VM Configuration**
+   - Service account attached (via Terraform)
+   - Docker and docker-compose installed
+   - Git repository cloned to ~/music-graph
+   - .env.prod configured with production secrets
+   - Flask-Migrate initialized (one-time setup)
+
 ### Version Examples
 
 ```
@@ -446,19 +475,22 @@ See `docs/production-operations.md` for complete rollback procedures.
 - ✅ Rollback procedures documented
 - ✅ GitHub releases created automatically
 - ✅ Multi-tag image strategy
+- ✅ **First production deployment successful!**
 
 **Documentation:**
 - ✅ Production operations guide (migrations, deployment, rollback, emergency)
 - ✅ .env.prod.example for secrets template
+- ✅ Prerequisites documented (SSH setup, GitHub permissions)
 
-**Ready for first production deployment!**
+**Verification:**
+- ✅ Production VM using docker-compose.prod.yml
+- ✅ Flask-Migrate initialized (baseline: revision 22564d35cf2d)
+- ✅ GitHub Actions workflow tested end-to-end
+- ✅ Pre-deployment backup created successfully
+- ✅ Health checks passed
+- ✅ GitHub release created automatically
 
-**Next Steps:**
-1. Set up production VM (similar to dev setup)
-2. Configure `.env.prod` with production secrets
-3. Initialize Flask-Migrate on prod VM
-4. Run first production deployment
-5. Verify and test
+**Phase 4 Complete!**
 
 ## Database Backups
 
@@ -545,11 +577,11 @@ After deployment, run automated checks:
 - ✅ CI pipeline runs tests on every PR and push
 - ✅ Dev environment mirrors production
 - ✅ Automatic deployment to dev on merge to main
-- ⏳ Manual deployment to prod with one click
+- ✅ Manual deployment to prod with one click
+- ✅ Rollback procedure documented and tested
 - ⏳ CI/CD optimization: conditional builds and image retention (Issue #8)
-- ⏳ Database backups automated and tested
+- ⏳ Database backups automated and tested (daily backups, retention policies)
 - ⏳ Certbot auto-renewal works without manual intervention
-- ⏳ Rollback procedure documented and tested
 
 ## Cost Considerations
 

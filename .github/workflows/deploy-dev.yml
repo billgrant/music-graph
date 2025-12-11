@@ -3,6 +3,21 @@ name: Deploy to Dev
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'app.py'
+      - 'models.py'
+      - 'config.py'
+      - 'init_db.py'
+      - 'make_admin.py'
+      - 'migrate_*.py'
+      - 'entrypoint.sh'
+      - 'requirements.txt'
+      - 'Dockerfile'
+      - 'templates/**'
+      - 'static/**'
+      - 'tests/**'
+      - '.github/workflows/**'
+      - 'docker-compose.dev.yml'
   workflow_dispatch:  # Allows manual trigger from GitHub UI
 
 jobs:
@@ -35,23 +50,23 @@ jobs:
       run: |
         docker build -t music-graph:latest .
 
-    # Tag with both 'latest' and git SHA
+    # Tag with dev- prefix and dev-latest
     - name: Tag image
       run: |
         IMAGE_NAME="gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph"
         GIT_SHA="${{ github.sha }}"
 
-        # Tag with SHA for traceability
-        docker tag music-graph:latest ${IMAGE_NAME}:${GIT_SHA}
-        # Tag with 'latest' for convenience
-        docker tag music-graph:latest ${IMAGE_NAME}:latest
+        # Tag with dev- prefix + SHA for traceability
+        docker tag music-graph:latest ${IMAGE_NAME}:dev-${GIT_SHA}
+        # Tag with 'dev-latest' for dev environment
+        docker tag music-graph:latest ${IMAGE_NAME}:dev-latest
 
     # Push to GCR
     - name: Push to GCR
       run: |
         IMAGE_NAME="gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph"
-        docker push ${IMAGE_NAME}:${{ github.sha }}
-        docker push ${IMAGE_NAME}:latest
+        docker push ${IMAGE_NAME}:dev-${{ github.sha }}
+        docker push ${IMAGE_NAME}:dev-latest
 
   deploy-to-dev:
     runs-on: ubuntu-latest
@@ -78,8 +93,8 @@ jobs:
           # Configure Docker to use gcloud for GCR authentication
           gcloud auth configure-docker gcr.io --quiet
 
-          # Pull the new image
-          docker pull gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph:latest
+          # Pull the new dev image
+          docker pull gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph:dev-latest
 
           # Stop and remove old containers to ensure clean state
           docker-compose -f docker-compose.dev.yml down

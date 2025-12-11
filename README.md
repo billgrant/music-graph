@@ -252,22 +252,110 @@ python app.py
 
 ### Project Structure
 
-```
-music-graph/
-├── app.py              # Flask application entry point
-├── models.py           # SQLAlchemy database models
-├── config.py           # Database configuration
-├── init_db.py          # Database initialization script
-├── music_graph.db      # SQLite database (created by init_db.py)
-├── templates/          # Jinja2 HTML templates
-│   └── index.html      # Main page template
-├── static/             # CSS, JS, images
-│   └── style.css       # Dark theme styling
+```.
+├── CLAUDE.md
+├── Dockerfile
+├── LICENSE
+├── README.md
+├── __pycache__
+│   ├── app.cpython-312.pyc
+│   ├── config.cpython-312.pyc
+│   ├── data.cpython-312.pyc
+│   └── models.cpython-312.pyc
+├── app.py
+├── config.py
+├── coverage.xml
+├── docker-compose.dev.yml
+├── docker-compose.prod.yml
+├── docker-compose.yml
 ├── docs
-│   └── archive
-│       ├── PLANNING.md # Original design decisions and Phase 1 planning
-│       └── data.py     # Original test data for Phase 1
-└── README.md           # This file
+│   ├── archive
+│   │   ├── PLANNING.md
+│   │   └── data.py
+│   ├── dev-environment-setup.md
+│   ├── phase7-cicd-plan.md
+│   ├── production-operations.md
+│   └── terraform-workspace-guide.md
+├── entrypoint.sh
+├── htmlcov
+│   ├── app_py.html
+│   ├── class_index.html
+│   ├── config_py.html
+│   ├── coverage_html_cb_bcae5fc4.js
+│   ├── favicon_32_cb_58284776.png
+│   ├── function_index.html
+│   ├── index.html
+│   ├── init_db_py.html
+│   ├── keybd_closed_cb_ce680311.png
+│   ├── make_admin_py.html
+│   ├── migrate_genre_parents_py.html
+│   ├── models_py.html
+│   ├── status.json
+│   └── style_cb_a5a05ca4.css
+├── init_db.py
+├── make_admin.py
+├── migrate_genre_parents.py
+├── models.py
+├── music_graph.db
+├── pytest.ini
+├── requirements.txt
+├── static
+│   └── style.css
+├── templates
+│   ├── add_band.html
+│   ├── add_genre.html
+│   ├── admin.html
+│   ├── edit_band.html
+│   ├── edit_genre.html
+│   ├── index.html
+│   ├── login.html
+│   ├── manage_users.html
+│   └── register.html
+├── terraform
+│   ├── environments
+│   │   ├── README.md
+│   │   ├── dev.tfvars
+│   │   ├── dev.tfvars.example
+│   │   ├── main.tf
+│   │   ├── outputs.tf
+│   │   ├── prod.tfvars
+│   │   ├── prod.tfvars.example
+│   │   ├── startup-script.sh
+│   │   ├── terraform.tfstate
+│   │   ├── terraform.tfstate.1765227520.backup
+│   │   ├── terraform.tfstate.1765227571.backup
+│   │   ├── terraform.tfstate.1765227592.backup
+│   │   ├── terraform.tfstate.1765227597.backup
+│   │   ├── terraform.tfstate.1765227606.backup
+│   │   ├── terraform.tfstate.backup
+│   │   ├── terraform.tfstate.d
+│   │   │   ├── dev
+│   │   │   │   ├── terraform.tfstate
+│   │   │   │   └── terraform.tfstate.backup
+│   │   │   └── prod
+│   │   │       ├── terraform.tfstate
+│   │   │       └── terraform.tfstate.backup
+│   │   └── variables.tf
+│   └── project
+│       ├── README.md
+│       ├── main.tf
+│       ├── terraform.tfstate
+│       ├── terraform.tfstate.backup
+│       └── variables.tf
+└── tests
+    ├── __init__.py
+    ├── __pycache__
+    │   ├── __init__.cpython-312.pyc
+    │   ├── conftest.cpython-312-pytest-8.3.5.pyc
+    │   ├── test_basic.cpython-312-pytest-8.3.5.pyc
+    │   ├── test_models.cpython-312-pytest-8.3.5.pyc
+    │   └── test_routes.cpython-312-pytest-8.3.5.pyc
+    ├── conftest.py
+    ├── test_basic.py
+    ├── test_models.py
+    └── test_routes.py
+
+15 directories, 87 files
 ```
 
 ---

@@ -190,13 +190,13 @@ jobs:
           # Configure Docker to use gcloud for GCR authentication
           gcloud auth configure-docker gcr.io --quiet
 
-          # Pull the new image with version tag
+          # Pull the new production image
           VERSION="${{ needs.get-version.outputs.version }}"
           docker pull gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph:${VERSION}
 
-          # Tag it as latest locally for docker-compose
+          # Tag it as production locally for docker-compose
           docker tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph:${VERSION} \
-                     gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph:latest
+                     gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph:production
 
           # Stop and remove old containers to ensure clean state
           docker-compose -f docker-compose.prod.yml down

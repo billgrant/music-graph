@@ -234,12 +234,22 @@ docker-compose -f docker-compose.prod.yml exec web python <command>
 - Methodical testing
 
 **Code Change Workflow (Important!):**
-1. Explain the problem and why it's happening
-2. Propose the solution with exact code changes shown
-3. Discuss trade-offs or alternatives
-4. **Wait for approval** before making changes
-5. For new patterns: Show first example in detail, get understanding
-6. Similar changes can then move faster
+1. **Start with high-level explanation** - Explain concepts and approach BEFORE diving into code
+2. **Let Bill ask questions** - This is a learning project, understanding comes first
+3. **Discuss trade-offs and alternatives** - Present options, explain pros/cons
+4. **Address Bill's concerns** - He often catches important issues (e.g., tag collisions, workspace concerns)
+5. **Get explicit approval** - Wait for "yes, let's proceed" before writing code
+6. **Then implement** - Write the actual code changes after the plan is clear
+
+**What Bill finds most comfortable (Phase 7, Issue #8 planning session as example):**
+- High-level conceptual explanation without code details
+- Real-world analogies ("don't bake a new cake if the recipe didn't change")
+- Discussion of specific technical concerns (latest tag collision, Terraform state)
+- Iterative refinement based on questions
+- Clear implementation roadmap before touching files
+- This builds understanding and catches issues early
+
+**For new patterns:** Show first example in detail, get understanding, then similar changes can move faster
 
 **Bill's Background:**
 - 4 years at HashiCorp as Solutions Engineer (expert in Terraform!)

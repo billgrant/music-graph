@@ -3,8 +3,24 @@ name: CI
 on:
   push:
     branches: [ main ]
+    paths:
+      - '**.py'                    # Any Python file
+      - 'requirements.txt'         # Dependencies
+      - 'tests/**'                 # Test files
+      - '.github/workflows/ci.yml' # CI workflow itself
+      - 'pytest.ini'               # Test configuration
+      - '.flake8'                  # Linting configuration
+      - '.coveragerc'              # Coverage configuration
   pull_request:
     branches: [ main ]
+    paths:
+      - '**.py'
+      - 'requirements.txt'
+      - 'tests/**'
+      - '.github/workflows/ci.yml'
+      - 'pytest.ini'
+      - '.flake8'
+      - '.coveragerc'
   workflow_call:  # Allows other workflows to call this one
 
 jobs:
