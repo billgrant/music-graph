@@ -39,7 +39,7 @@ echo "[$(date)] Starting database backup for ${ENV} environment" | tee -a "$LOG_
 echo "[$(date)] Running pg_dump..." | tee -a "$LOG_FILE"
 cd ~/music-graph
 docker-compose -f "$COMPOSE_FILE" exec -T db \
-  pg_dump -U musicgraph musicgraph > "${BACKUP_DIR}/${BACKUP_FILE}"
+  pg_dump -U musicgraph musicgraph --clean --if-exists > "${BACKUP_DIR}/${BACKUP_FILE}"
 
 # Check if backup file was created
 if [ ! -f "${BACKUP_DIR}/${BACKUP_FILE}" ]; then
