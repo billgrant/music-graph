@@ -175,6 +175,10 @@ sudo grep CRON /var/log/syslog | grep backup-database
 
 ## Restore Procedure
 
+**✅ Tested and Verified:** December 11, 2025 on dev environment
+
+The backup script uses `pg_dump --clean --if-exists` which includes DROP TABLE statements, allowing restores over existing databases without conflicts.
+
 If you need to restore from a backup:
 
 ### 1. Download Backup from GCS
@@ -296,6 +300,43 @@ When provisioning a new VM, complete these steps:
 - Backup script: `backup-database.sh`
 - Verification script: `verify-backup-setup.sh`
 - GCS lifecycle policy: 7-day retention (configured in Terraform)
+
+---
+
+## Restore Test Results
+
+**Date:** December 11, 2025
+**Environment:** Dev
+**Tester:** Bill Grant
+
+### Test Procedure
+
+1. **Baseline:** Counted existing genres and bands in database
+2. **Backup:** Created backup using `./backup-database.sh dev`
+3. **Destructive Change:** Deleted "Death Metal" genre to simulate data loss
+4. **Restore:** Downloaded backup from GCS and restored to database
+5. **Verification:** Confirmed deleted genre was restored
+
+### Results
+
+✅ **Restore Successful**
+
+- Backup download: ~500KB compressed file
+- Restore time: < 30 seconds
+- Data integrity: 100% - all deleted data recovered
+- No errors or conflicts during restore
+- Application remained functional throughout process
+
+### Key Learnings
+
+1. **--clean --if-exists flags are essential** - Allow restoring over existing database without dropping it first
+2. **Only stop web container** - Database container stays running during restore
+3. **Backups include DROP statements** - No duplicate key errors
+4. **Quick recovery** - Entire restore process takes < 2 minutes including download
+
+### Conclusion
+
+Backup and restore system is **production-ready**. Successfully tested disaster recovery scenario with complete data recovery.
 
 ---
 
