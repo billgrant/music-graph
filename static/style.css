@@ -85,7 +85,7 @@ h2 {
 /* Graph visualization container */
 #network-graph {
     width: 100%;
-    height: calc(100vh - 280px);
+    height: calc(100vh - 320px);
     min-height: 400px;
     border: 2px solid #333;
     border-radius: 8px;
@@ -206,7 +206,7 @@ input[readonly] {
 /* Multi-select styling */
 select[multiple] {
     padding: 5px;
-    min-height: 150px;
+    min-height: 250px;
 }
 
 /* Genre filter input above multi-selects */
@@ -484,4 +484,27 @@ select[multiple] option:checked {
 
 .text-muted {
     color: #666;
+}
+
+/* Site Footer */
+.site-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    padding: 10px 20px;
+    background-color: #1a1a1a;
+    border-top: 1px solid #333;
+    color: #888;
+    font-size: 0.85rem;
+}
+
+.site-footer a {
+    color: #4CAF50;
+    text-decoration: none;
+}
+
+.site-footer a:hover {
+    text-decoration: underline;
 }
