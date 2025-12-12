@@ -1,6 +1,6 @@
 # Music Graph Project - Claude Context
 
-**Last Updated:** December 11, 2025 (Phase 7 Complete ✅)
+**Last Updated:** December 12, 2025 (Phase 8 Complete ✅)
 
 ## Project Overview
 
@@ -20,17 +20,29 @@ Music Graph is a Flask web application that visualizes music genre hierarchies a
 - GitHub for version control
 - GitHub Issues for backlog/task tracking (no Jira needed for solo project)
 
-## Current Phase: Phase 8 (Planning)
+## Current Phase: Phase 9 (Planning)
 
-**Focus:** UI/UX Improvements Based on User Feedback (See Issue #14)
+**Focus:** Infrastructure Modernization (Issue #10)
 
-**User Requests from Aidan:**
-- Sort genre list alphabetically and add search/filter
-- Make genre selection boxes bigger
-- Size nodes by hierarchy (root=large, intermediate=medium, leaf=small)
-- Add contact information to footer
+**Planned:**
+- Remote Terraform state (GCS backend with locking)
+- Replace Flask dev server with Gunicorn
+- Immutable infrastructure with Packer images
+- Remove static secrets from repository
 
-**Future Phase:** Infrastructure Modernization (Issue #10) - Remote state, Gunicorn, Packer, secrets management
+## Previous Phase: Phase 8 (Complete ✅)
+
+**Focus:** UI/UX Improvements Based on User Feedback (Issue #14)
+
+**Completed:**
+- ✅ Viewport-relative graph sizing (fills screen)
+- ✅ Node sizing by hierarchy (root=large, intermediate=medium, leaf=small)
+- ✅ Alphabetically sorted genre lists
+- ✅ Client-side search/filter for multi-selects
+- ✅ Larger genre selection boxes
+- ✅ Fixed footer with contact info
+- ✅ Removed dict conversion (Issue #4)
+- ✅ Fixed test isolation (tests no longer wipe dev database)
 
 ## Previous Phase: Phase 7 (Complete ✅)
 
@@ -178,9 +190,12 @@ docker-compose -f docker-compose.prod.yml exec web python <migration_script>.py
 
 **Blog Documentation:**
 Each phase gets a blog post at https://billgrant.io
+- Blog repo: `~/code/billgrant.github.io` (Jekyll site)
+- Posts go in `_posts/` directory with format `YYYY-MM-DD-title.md`
 - Tag: #music-graph
-- Written by Claude with Bill's intro/edits
+- Written by Claude with Bill's intro between `*** ***` markers
 - Documents successes AND failures
+- Bill opens CLI in `~/code` so Claude can access both repos
 
 ## Architecture Decisions
 

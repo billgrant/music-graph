@@ -6,9 +6,20 @@ An interactive web application that visualizes music genres and bands as a conne
 
 Create a visual map showing how music genres relate to each other and which bands belong to which genres. Users can explore genre relationships and discover bands within each style of music.
 
-## Current Phase: Phase 8 - UI/UX Improvements (Planning)
+## Current Phase: Phase 9 - Infrastructure Modernization (Planning)
 
-Focus on user experience improvements based on feedback from Aidan (primary user).
+Focus on production-grade infrastructure with remote state, Gunicorn, and immutable deployments.
+
+### Phase 8 Summary (Complete ✅)
+Phase 8 implemented UI/UX improvements based on user feedback:
+- Viewport-relative graph sizing (fills available screen space)
+- Node sizing by hierarchy (root=large, intermediate=medium, leaf=small)
+- Alphabetically sorted genre lists in all forms
+- Client-side search/filter for multi-select dropdowns
+- Larger genre selection boxes (250px min-height)
+- Fixed footer with contact/GitHub links
+- Removed dict conversion tech debt (Issue #4)
+- Fixed test isolation bug (tests no longer wipe dev database)
 
 ### Phase 7 Summary (Complete ✅)
 Phase 7 implemented production-ready CI/CD and DevOps practices:
@@ -186,18 +197,6 @@ Phase 4 successfully added authentication and authorization:
 
 ## Roadmap
 
-### Phase 8: UI/UX Improvements (In Progress)
-**Goal:** Improve user experience based on Aidan's feedback
-
-**Planned:**
-- Sort genre lists alphabetically
-- Add search/filter for genres
-- Increase genre selection box size
-- Size graph nodes by hierarchy (root=large, intermediate=medium, leaf=small)
-- Add contact information footer
-
-**Why:** Direct user feedback from primary user - these improvements directly impact usability
-
 ### Phase 9: Infrastructure Modernization
 **Goal:** Production-grade infrastructure with immutable deployments
 
@@ -319,6 +318,9 @@ This project is documented on my blog at [billgrant.io](https://billgrant.io).
 
 **Phase 7 Posts:**
 - [CI/CD and Production DevOps](https://billgrant.io/2025/12/11/phase-7-cicd-devops/) - GitHub Actions, database backups, SSL auto-renewal
+
+**Phase 8 Posts:**
+- [UI/UX Improvements](https://billgrant.io/2025/12/12/phase-8-ui-ux-improvements/) - Viewport sizing, node hierarchy, filtering, footer
 
 **Workflow Posts:**
 - [Upgrading My AI Workflow with MCP](https://billgrant.io/2025/12/07/mcp-setup/) - Model Context Protocol setup for better file access
