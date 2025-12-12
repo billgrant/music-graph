@@ -58,7 +58,7 @@ def index():
     bands = Band.query.all()
     
     # Convert to dict format for template (temporary - we'll improve this later)
-    genres_dict = {g.id: {'name': g.name} for g in genres}
+    genres_dict = {g.id: {'name': g.name, 'type': g.type} for g in genres}
     bands_dict = {
         b.id: {
             'name': b.name,

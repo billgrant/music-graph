@@ -41,18 +41,15 @@
 
         // Genre and band nodes
         var nodes = new vis.DataSet([
-            // Add genres
+            // Add genres - sized by hierarchy (root=large, intermediate=medium, leaf=small)
             {% for genre_id, genre_data in genres.items() %}
         {
             id: '{{ genre_id }}',
-                label: '{{ genre_data.name }}',
-                    shape: 'circle',
-                        color: '#4CAF50',
-                            font: {
-                size: 16,
-                    color: '#ffffff'
-            },
-            group: 'genre'  // Add group for easier filtering
+            label: '{{ genre_data.name }}',
+            shape: 'dot',
+            size: {% if genre_data.type == 'root' %}40{% elif genre_data.type == 'intermediate' %}25{% else %}15{% endif %},
+            color: '#4CAF50',
+            group: 'genre'
         },
         {% endfor %}
         // Add bands (hidden by default)
@@ -95,12 +92,18 @@
         // Configuration options (like your network diagram layout settings)
         var options = {
             nodes: {
+                shape: 'dot',
                 font: {
-                    size: 16,
+                    size: 14,
                     color: '#ffffff'
                 },
                 borderWidth: 2,
-                borderWidthSelected: 4
+                borderWidthSelected: 4,
+                scaling: {
+                    label: {
+                        enabled: false
+                    }
+                }
             },
             edges: {
                 width: 2,
