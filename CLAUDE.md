@@ -196,6 +196,12 @@ Each phase gets a blog post at https://billgrant.io
 - Written by Claude with Bill's intro between `*** ***` markers
 - Documents successes AND failures
 - Bill opens CLI in `~/code` so Claude can access both repos
+- When showing Jinja/template code in posts, wrap with `{% raw %}...{% endraw %}` to prevent Jekyll from processing it:
+  ```
+  {% raw %}
+  {{ genre.name }} or {% if condition %}{% endif %}
+  {% endraw %}
+  ```
 
 ## Architecture Decisions
 
