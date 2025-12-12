@@ -18,6 +18,7 @@ Music Graph is a Flask web application that visualizes music genre hierarchies a
 - Terraform for infrastructure (with workspaces)
 - GitHub Actions for CI/CD
 - GitHub for version control
+- GitHub Issues for backlog/task tracking (no Jira needed for solo project)
 
 ## Current Phase: Phase 8 (Planning)
 

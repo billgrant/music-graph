@@ -56,23 +56,12 @@ def index():
     # Query all genres and bands from database
     genres = Genre.query.all()
     bands = Band.query.all()
-    
-    # Convert to dict format for template (temporary - we'll improve this later)
-    genres_dict = {g.id: {'name': g.name, 'type': g.type} for g in genres}
-    bands_dict = {
-        b.id: {
-            'name': b.name,
-            'primary_genre': b.primary_genre_id,
-            'genres': [g.id for g in b.genres]
-        } 
-        for b in bands
-    }
 
     connections = get_unique_connections(genres)
-    
-    return render_template('index.html', 
-                         genres=genres_dict, 
-                         bands=bands_dict, 
+
+    return render_template('index.html',
+                         genres=genres,
+                         bands=bands,
                          connections=connections)
 
 @app.route('/add-genre', methods=['GET', 'POST'])

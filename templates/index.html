@@ -42,30 +42,30 @@
         // Genre and band nodes
         var nodes = new vis.DataSet([
             // Add genres - sized by hierarchy (root=large, intermediate=medium, leaf=small)
-            {% for genre_id, genre_data in genres.items() %}
+            {% for genre in genres %}
         {
-            id: '{{ genre_id }}',
-            label: '{{ genre_data.name }}',
+            id: '{{ genre.id }}',
+            label: '{{ genre.name }}',
             shape: 'dot',
-            size: {% if genre_data.type == 'root' %}40{% elif genre_data.type == 'intermediate' %}25{% else %}15{% endif %},
+            size: {% if genre.type == 'root' %}40{% elif genre.type == 'intermediate' %}25{% else %}15{% endif %},
             color: '#4CAF50',
             group: 'genre'
         },
         {% endfor %}
         // Add bands (hidden by default)
-        {% for band_id, band_data in bands.items() %}
+        {% for band in bands %}
         {
-            id: '{{ band_id }}',
-                label: '{{ band_data.name }}',
-                    shape: 'text',
-                        font: {
+            id: '{{ band.id }}',
+            label: '{{ band.name }}',
+            shape: 'text',
+            font: {
                 color: '#ffffff',
-                    size: 14
+                size: 14
             },
-            hidden: true,  // Hide bands by default
-                group: 'band',  // Add group for easier filtering
-                    parentGenre: '{{ band_data.primary_genre }}'  // Track which genre this band belongs to
-        } {% if not loop.last %}, {% endif %}
+            hidden: true,
+            group: 'band',
+            parentGenre: '{{ band.primary_genre_id }}'
+        }{% if not loop.last %},{% endif %}
         {% endfor %}
 ]);
 
@@ -76,8 +76,8 @@
         { from: '{{ from_id }}', to: '{{ to_id }}' },
         {% endfor %}
         // Band to genre connections (primary only)
-        {% for band_id, band_data in bands.items() %}
-        { from: '{{ band_id }}', to: '{{ band_data.primary_genre }}' } {% if not loop.last %}, {% endif %}
+        {% for band in bands %}
+        { from: '{{ band.id }}', to: '{{ band.primary_genre_id }}' }{% if not loop.last %},{% endif %}
         {% endfor %}
 ]);
         // Container element
