@@ -120,11 +120,11 @@ def add_genre():
             for error in errors:
                 flash(error, 'error')
             # Re-render form with existing data
-            genres = Genre.query.all()
-            return render_template('add_genre.html', 
+            genres = Genre.query.order_by(Genre.name).all()
+            return render_template('add_genre.html',
                                  genres=genres,
                                  form_data=request.form)
-        
+
         # Try to add to database
         try:
             new_genre = Genre(
@@ -147,13 +147,13 @@ def add_genre():
         except Exception as e:
             db.session.rollback()
             flash(f'Error adding genre: {str(e)}', 'error')
-            genres = Genre.query.all()
-            return render_template('add_genre.html', 
+            genres = Genre.query.order_by(Genre.name).all()
+            return render_template('add_genre.html',
                                  genres=genres,
                                  form_data=request.form)
-    
+
     # GET request - show the form
-    genres = Genre.query.all()
+    genres = Genre.query.order_by(Genre.name).all()
     return render_template('add_genre.html', genres=genres)
 
 @app.route('/add-band', methods=['GET', 'POST'])
@@ -206,11 +206,11 @@ def add_band():
         if errors:
             for error in errors:
                 flash(error, 'error')
-            genres = Genre.query.filter_by(type='leaf').all()
-            return render_template('add_band.html', 
+            genres = Genre.query.filter_by(type='leaf').order_by(Genre.name).all()
+            return render_template('add_band.html',
                                  genres=genres,
                                  form_data=request.form)
-        
+
         # Try to add to database
         try:
             # Create band
@@ -233,14 +233,14 @@ def add_band():
         except Exception as e:
             db.session.rollback()
             flash(f'Error adding band: {str(e)}', 'error')
-            genres = Genre.query.filter_by(type='leaf').all()
-            return render_template('add_band.html', 
+            genres = Genre.query.filter_by(type='leaf').order_by(Genre.name).all()
+            return render_template('add_band.html',
                                  genres=genres,
                                  form_data=request.form)
-    
+
     # GET request - show the form
     # Only show leaf genres (bands can't be assigned to intermediate/root)
-    genres = Genre.query.filter_by(type='leaf').all()
+    genres = Genre.query.filter_by(type='leaf').order_by(Genre.name).all()
     return render_template('add_band.html', genres=genres)
 
 @app.route('/edit-genre/<genre_id>', methods=['GET', 'POST'])
@@ -283,8 +283,8 @@ def edit_genre(genre_id):
         if errors:
             for error in errors:
                 flash(error, 'error')
-            genres = Genre.query.filter(Genre.id != genre_id).all()  # Exclude current genre from parent options
-            return render_template('edit_genre.html', 
+            genres = Genre.query.filter(Genre.id != genre_id).order_by(Genre.name).all()
+            return render_template('edit_genre.html',
                                  genre=genre,
                                  genres=genres,
                                  form_data=request.form)
@@ -310,14 +310,14 @@ def edit_genre(genre_id):
         except Exception as e:
             db.session.rollback()
             flash(f'Error updating genre: {str(e)}', 'error')
-            genres = Genre.query.filter(Genre.id != genre_id).all()
-            return render_template('edit_genre.html', 
+            genres = Genre.query.filter(Genre.id != genre_id).order_by(Genre.name).all()
+            return render_template('edit_genre.html',
                                  genre=genre,
                                  genres=genres,
                                  form_data=request.form)
-    
+
     # GET request - show the form
-    genres = Genre.query.filter(Genre.id != genre_id).all()  # Exclude current genre
+    genres = Genre.query.filter(Genre.id != genre_id).order_by(Genre.name).all()
     return render_template('edit_genre.html', genre=genre, genres=genres)
 
 @app.route('/edit-band/<band_id>', methods=['GET', 'POST'])
@@ -357,8 +357,8 @@ def edit_band(band_id):
         if errors:
             for error in errors:
                 flash(error, 'error')
-            genres = Genre.query.filter_by(type='leaf').all()
-            return render_template('edit_band.html', 
+            genres = Genre.query.filter_by(type='leaf').order_by(Genre.name).all()
+            return render_template('edit_band.html',
                                  band=band,
                                  genres=genres,
                                  form_data=request.form)
@@ -380,14 +380,14 @@ def edit_band(band_id):
         except Exception as e:
             db.session.rollback()
             flash(f'Error updating band: {str(e)}', 'error')
-            genres = Genre.query.filter_by(type='leaf').all()
-            return render_template('edit_band.html', 
+            genres = Genre.query.filter_by(type='leaf').order_by(Genre.name).all()
+            return render_template('edit_band.html',
                                  band=band,
                                  genres=genres,
                                  form_data=request.form)
-    
+
     # GET request - show the form
-    genres = Genre.query.filter_by(type='leaf').all()
+    genres = Genre.query.filter_by(type='leaf').order_by(Genre.name).all()
     return render_template('edit_band.html', band=band, genres=genres)
 
 @app.route('/delete-genre/<genre_id>', methods=['POST'])
