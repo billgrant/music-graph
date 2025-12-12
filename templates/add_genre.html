@@ -89,6 +89,7 @@
 
     <div class="form-group">
         <label for="parent_genres">All Parent Genres (optional):</label>
+        <input type="text" class="genre-filter" data-target="parent_genres" placeholder="Type to filter genres...">
         <select id="parent_genres" name="parent_genres" multiple size="8">
             {% for genre in genres %}
             <option value="{{ genre.id }}"
@@ -127,7 +128,7 @@
         // Auto-select primary parent in multi-select when changed
         const primaryParentSelect = document.getElementById('parent_id');
         const allParentsSelect = document.getElementById('parent_genres');
-        
+
         primaryParentSelect.addEventListener('change', function() {
             if (this.value) {
                 // Find and select the option in the multi-select
@@ -138,5 +139,6 @@
             }
         });
     </script>
+    <script src="{{ url_for('static', filename='js/filter.js') }}"></script>
 </body>
 </html>

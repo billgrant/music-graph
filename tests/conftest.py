@@ -2,6 +2,12 @@
 import pytest
 import os
 import tempfile
+
+# Set test database BEFORE importing app - this is critical!
+# The app reads DATABASE_URL from environment on import
+_db_fd, _db_path = tempfile.mkstemp(suffix='.db')
+os.environ['DATABASE_URL'] = f'sqlite:///{_db_path}'
+
 from app import app as flask_app
 from models import db, Genre, Band, User
 
@@ -9,25 +15,17 @@ from models import db, Genre, Band, User
 @pytest.fixture
 def app():
     """Create and configure a test Flask application instance."""
-    # Create a temporary database file
-    db_fd, db_path = tempfile.mkstemp()
-
     flask_app.config.update({
         'TESTING': True,
-        'SQLALCHEMY_DATABASE_URI': f'sqlite:///{db_path}',
         'SECRET_KEY': 'test-secret-key',
-        'WTF_CSRF_ENABLED': False  # Disable CSRF for testing
+        'WTF_CSRF_ENABLED': False
     })
 
-    # Create the database and tables
     with flask_app.app_context():
         db.create_all()
         yield flask_app
+        db.session.remove()
         db.drop_all()
-
-    # Clean up temp database
-    os.close(db_fd)
-    os.unlink(db_path)
 
 
 @pytest.fixture

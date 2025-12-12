@@ -70,6 +70,7 @@
             
             <div class="form-group">
                 <label for="genres">All Genres (select multiple):</label>
+                <input type="text" class="genre-filter" data-target="genres" placeholder="Type to filter genres...">
                 <select id="genres" name="genres" multiple size="6" required>
                     {% for genre in genres %}
                     <option value="{{ genre.id }}"
@@ -109,5 +110,6 @@
             }
         });
     </script>
+    <script src="{{ url_for('static', filename='js/filter.js') }}"></script>
 </body>
 </html>

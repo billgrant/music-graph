@@ -86,6 +86,7 @@
             
             <div class="form-group">
         <label for="parent_genres">All Parent Genres (optional):</label>
+        <input type="text" class="genre-filter" data-target="parent_genres" placeholder="Type to filter genres...">
         <select id="parent_genres" name="parent_genres" multiple size="8">
             {% for g in genres %}
             <option value="{{ g.id }}"
@@ -123,5 +124,6 @@
             }
         });
     </script>
+    <script src="{{ url_for('static', filename='js/filter.js') }}"></script>
 </body>
 </html>

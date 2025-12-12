@@ -209,6 +209,28 @@ select[multiple] {
     min-height: 150px;
 }
 
+/* Genre filter input above multi-selects */
+.genre-filter {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 8px;
+    background-color: #1a1a1a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #ffffff;
+    font-size: 1rem;
+    font-family: inherit;
+}
+
+.genre-filter:focus {
+    outline: none;
+    border-color: #4CAF50;
+}
+
+.genre-filter::placeholder {
+    color: #666;
+}
+
 select[multiple] option {
     padding: 8px;
     margin: 2px 0;
