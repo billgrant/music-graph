@@ -10,4 +10,5 @@ machine_type          = "e2-micro"
 disk_size_gb          = 10
 ssh_user              = "your-username"
 ssh_public_key_path   = "~/.ssh/id_rsa.pub"
-allowed_ips           = ["your.ip.address/32"]  # Your home/office IP
+allowed_web_ips       = ["0.0.0.0/0"]           # Public access for HTTP/HTTPS
+allowed_ssh_ips       = ["your.ip.address/32"]  # Your home/office IP for SSH

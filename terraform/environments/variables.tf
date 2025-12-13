@@ -44,7 +44,12 @@ variable "ssh_public_key_path" {
   default     = "~/.ssh/id_rsa.pub"
 }
 
-variable "allowed_ips" {
-  description = "List of allowed IP addresses"
+variable "allowed_web_ips" {
+  description = "List of allowed IP addresses for HTTP/HTTPS traffic"
+  type        = list(string)
+}
+
+variable "allowed_ssh_ips" {
+  description = "List of allowed IP addresses for SSH access"
   type        = list(string)
 }

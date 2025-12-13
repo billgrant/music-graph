@@ -64,7 +64,7 @@ resource "google_compute_instance" "music_graph" {
   }
 }
 
-# Firewall rule for HTTP
+# Firewall rule for HTTP (public access)
 resource "google_compute_firewall" "http" {
   name    = "allow-http-${var.environment}"
   network = "default"
@@ -74,11 +74,11 @@ resource "google_compute_firewall" "http" {
     ports    = ["80"]
   }
 
-  source_ranges = var.allowed_ips
+  source_ranges = var.allowed_web_ips
   target_tags   = ["http-server"]
 }
 
-# Firewall rule for HTTPS
+# Firewall rule for HTTPS (public access)
 resource "google_compute_firewall" "https" {
   name    = "allow-https-${var.environment}"
   network = "default"
@@ -88,11 +88,11 @@ resource "google_compute_firewall" "https" {
     ports    = ["443"]
   }
 
-  source_ranges = var.allowed_ips
+  source_ranges = var.allowed_web_ips
   target_tags   = ["https-server"]
 }
 
-# Firewall rule for SSH (restricted to your IP)
+# Firewall rule for SSH (restricted access)
 resource "google_compute_firewall" "ssh" {
   name    = "allow-ssh-${var.environment}"
   network = "default"
@@ -102,6 +102,6 @@ resource "google_compute_firewall" "ssh" {
     ports    = ["22"]
   }
 
-  source_ranges = var.allowed_ips
+  source_ranges = var.allowed_ssh_ips
   target_tags   = ["music-graph-${var.environment}"]
 }
