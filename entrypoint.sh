@@ -39,6 +39,6 @@ else
     echo "Skipping database initialization (already exists)"
 fi
 
-# Start application
-echo "Starting application..."
-exec python app.py
+# Start application with Gunicorn (production WSGI server)
+echo "Starting application with Gunicorn..."
+exec gunicorn --bind 0.0.0.0:5000 --workers 2 app:app

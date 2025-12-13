@@ -88,6 +88,16 @@ music-graph/
 └── docs/              # Planning documents and archives
 ```
 
+## Project Location & Claude Code Access
+
+**IMPORTANT:** Bill starts Claude Code CLI from `~/code` directory to provide access to both repos:
+- `~/code/music-graph` - This project (Flask app, Terraform, Docker)
+- `~/code/billgrant.github.io` - Blog repo for writing phase documentation
+
+**Claude Code has direct filesystem access** - use Read, Edit, Glob, Grep tools directly on these paths. No need to fetch from GitHub when you can read locally.
+
+**GitHub Repository:** https://github.com/billgrant/music-graph
+
 ## Database Schema
 
 **Genre Model:**
@@ -307,14 +317,14 @@ docker-compose -f docker-compose.prod.yml exec web python <command>
 - Include code examples and architecture decisions
 - Mention both successes and challenges
 
-## MCP Setup (Current)
+## Claude Code CLI Setup
 
-Bill has three MCP servers configured in Claude Desktop:
-1. GitHub access (music-graph and blog repos)
-2. Filesystem access to local music-graph directory
-3. Filesystem access to local blog directory
+Bill uses Claude Code CLI (not Claude Desktop) started from `~/code` directory. This provides:
+- Direct filesystem access to both repos via Read, Edit, Glob, Grep tools
+- No MCP servers needed - Claude Code has native file access
+- Can read/edit files in both `music-graph/` and `billgrant.github.io/` repos
 
-This eliminates copy/paste and enables multi-file operations.
+**Always use local file tools first** before fetching from GitHub URLs.
 
 ## Questions to Ask
 
