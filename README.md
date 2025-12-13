@@ -6,9 +6,19 @@ An interactive web application that visualizes music genres and bands as a conne
 
 Create a visual map showing how music genres relate to each other and which bands belong to which genres. Users can explore genre relationships and discover bands within each style of music.
 
-## Current Phase: Phase 9 - Infrastructure Modernization (Planning)
+## Current Phase: Phase 10 - UI Enhancements (Planning)
 
-Focus on production-grade infrastructure with remote state, Gunicorn, and immutable deployments.
+Focus on improving user experience with detail panels and graph scalability.
+
+### Phase 9 Summary (Complete ✅)
+Phase 9 took the site public with security-focused improvements:
+- Replaced Flask dev server with Gunicorn (2 workers)
+- Fixed logout bug (wrong decorator)
+- Hidden login UI, disabled public registration
+- Rate limiting on login (5/minute via Flask-Limiter)
+- GCP Secret Manager for SECRET_KEY and POSTGRES_PASSWORD
+- Split firewall rules (web public, SSH restricted)
+- Site is now publicly accessible at https://music-graph.billgrant.io
 
 ### Phase 8 Summary (Complete ✅)
 Phase 8 implemented UI/UX improvements based on user feedback:
@@ -167,10 +177,13 @@ Phase 4 successfully added authentication and authorization:
 **Current:**
 - Python 3.12+
 - Flask web framework
+- Gunicorn WSGI server (production)
 - SQLAlchemy ORM
 - PostgreSQL database (production) / SQLite (development)
 - Flask-Login for authentication
+- Flask-Limiter for rate limiting
 - Werkzeug Security for password hashing
+- GCP Secret Manager for credentials
 - Vis.js for graph visualization
 - HTML/CSS/JavaScript frontend
 - Docker and docker-compose
@@ -178,8 +191,6 @@ Phase 4 successfully added authentication and authorization:
 - Let's Encrypt SSL certificates
 - Google Cloud Platform (Compute Engine)
 - Terraform for infrastructure as code
-
-**Current:**
 - GitHub Actions for CI/CD and deployments
 - Google Cloud Storage for database backups
 - AWS Route53 for DNS and certbot DNS-01 validation
@@ -191,26 +202,34 @@ Phase 4 successfully added authentication and authorization:
 - Cloud SQL managed database
 - REST API
 - Packer images for immutable infrastructure
-- GCP Secret Manager for secrets management
+- Remote Terraform state (GCS backend)
 
 ---
 
 ## Roadmap
 
-### Phase 9: Infrastructure Modernization
+### Phase 10: UI Enhancements (Current)
+**Goal:** Improve user experience and graph usability
+
+**Planned:**
+- Detail panel showing all band/genre relationships
+- Graph scalability improvements
+- Base template pattern for cleaner HTML
+
+**Why:** Better UX for exploring relationships; cleaner codebase
+
+### Phase 11: Infrastructure Modernization
 **Goal:** Production-grade infrastructure with immutable deployments
 
 **Planned:**
 - Remote Terraform state (GCS backend with locking)
-- Replace Flask dev server with Gunicorn (Issue #2)
 - Immutable infrastructure with Packer images (Issue #7)
-- Remove static secrets from repository (Issue #12)
-- Import DNS records to Terraform (Issue #11)
-- Evaluate Cloud SQL vs Docker PostgreSQL
+- Redis for rate limiting persistence
+- Automated database migrations
 
-**Why:** Reproducible infrastructure, better secrets management, production-ready WSGI server
+**Why:** Reproducible infrastructure, learning modern DevOps patterns
 
-### Phase 10: Monitoring and Observability
+### Future: Monitoring and Observability
 **Goal:** Understand application health and usage
 
 **Planned:**
@@ -321,6 +340,9 @@ This project is documented on my blog at [billgrant.io](https://billgrant.io).
 
 **Phase 8 Posts:**
 - [UI/UX Improvements](https://billgrant.io/2025/12/12/phase-8-ui-ux-improvements/) - Viewport sizing, node hierarchy, filtering, footer
+
+**Phase 9 Posts:**
+- [Going Public](https://billgrant.io/2025/12/13/phase-9-going-public/) - Gunicorn, rate limiting, GCP Secret Manager, public launch
 
 **Workflow Posts:**
 - [Upgrading My AI Workflow with MCP](https://billgrant.io/2025/12/07/mcp-setup/) - Model Context Protocol setup for better file access
