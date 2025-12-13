@@ -537,7 +537,7 @@ def register():
     return render_template('register.html')
 
 @app.route('/logout')
-@admin_required
+@login_required
 def logout():
     logout_user()
     flash('You have been logged out.', 'success')
