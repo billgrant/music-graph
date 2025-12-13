@@ -12,9 +12,6 @@ from functools import wraps
 
 app = Flask(__name__)
 app.config.from_object(Config)
-app.config.from_object(Config)
-app.config['SECRET_KEY'] = 'dev-secret-key-change-in-production'  # We'll make this better in Phase 4
-
 
 # Initialize database
 db.init_app(app)

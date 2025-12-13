@@ -18,6 +18,12 @@ provider "google" {
   region  = var.region
 }
 
+# Enable Secret Manager API
+resource "google_project_service" "secretmanager" {
+  service            = "secretmanager.googleapis.com"
+  disable_on_destroy = false
+}
+
 # Import existing GCR repository into Terraform state
 import {
   to = google_artifact_registry_repository.music_graph

@@ -25,6 +25,8 @@ services:
       db:
         condition: service_healthy
     restart: unless-stopped
+    environment:
+      - ENVIRONMENT=prod
 
 volumes:
   postgres_data:

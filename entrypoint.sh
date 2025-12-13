@@ -1,6 +1,55 @@
 #!/bin/bash
 set -e
 
+# =============================================================================
+# Fetch secrets from GCP Secret Manager (if running in GCP)
+# Uses metadata server for auth - no gcloud CLI needed
+# =============================================================================
+
+fetch_gcp_secret() {
+    local secret_name=$1
+    local project_id=$2
+    local token=$3
+
+    # Fetch secret from Secret Manager API
+    local response=$(curl -s "https://secretmanager.googleapis.com/v1/projects/${project_id}/secrets/${secret_name}/versions/latest:access" \
+        -H "Authorization: Bearer ${token}")
+
+    # Extract and decode the secret value (base64 encoded in response)
+    echo "$response" | python3 -c "import sys,json,base64; print(base64.b64decode(json.load(sys.stdin)['payload']['data']).decode())"
+}
+
+# Check if running in GCP by testing metadata server
+if curl -s -f -m 2 "http://metadata.google.internal/computeMetadata/v1/" -H "Metadata-Flavor: Google" > /dev/null 2>&1; then
+    echo "Running in GCP - fetching secrets from Secret Manager..."
+
+    # Get project ID from metadata
+    PROJECT_ID=$(curl -s "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google")
+
+    # Get access token from metadata server
+    TOKEN=$(curl -s "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token" \
+        -H "Metadata-Flavor: Google" | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+
+    # Determine environment (default to prod if not set)
+    ENV="${ENVIRONMENT:-prod}"
+    echo "Environment: ${ENV}"
+
+    # Fetch secrets
+    export SECRET_KEY=$(fetch_gcp_secret "music-graph-${ENV}-secret-key" "$PROJECT_ID" "$TOKEN")
+    export POSTGRES_PASSWORD=$(fetch_gcp_secret "music-graph-${ENV}-db-password" "$PROJECT_ID" "$TOKEN")
+
+    # Construct DATABASE_URL using the fetched password
+    export DATABASE_URL="postgresql://musicgraph:${POSTGRES_PASSWORD}@db:5432/musicgraph"
+
+    echo "Secrets loaded from Secret Manager"
+else
+    echo "Not running in GCP - using environment variables from docker-compose"
+fi
+
+# =============================================================================
+# Wait for PostgreSQL and start application
+# =============================================================================
+
 echo "Waiting for PostgreSQL..."
 until PGPASSWORD=$POSTGRES_PASSWORD psql -h "db" -U "musicgraph" -c '\q' 2>/dev/null; do
   echo "Waiting for database connection..."
