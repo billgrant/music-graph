@@ -22,9 +22,6 @@
         {% endif %}
         <span class="nav-user">{{ current_user.username }}</span>
         <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
-    {% else %}
-        <a href="{{ url_for('login') }}" class="nav-link">Login</a>
-        <a href="{{ url_for('register') }}" class="nav-link">Register</a>
     {% endif %}
 </div>
     </div>
@@ -182,7 +179,7 @@
         }
     </script>
     <footer class="site-footer">
-        <p>Built by <a href="https://github.com/billgrant" target="_blank">Bill Grant</a> | <a href="https://github.com/billgrant/music-graph" target="_blank">View on GitHub</a></p>
+        <p>Built by <a href="https://github.com/billgrant" target="_blank">Bill Grant</a> | <a href="https://github.com/billgrant/music-graph" target="_blank">View on GitHub</a> | <a href="{{ url_for('login') }}">Admin</a></p>
     </footer>
 </body>
 

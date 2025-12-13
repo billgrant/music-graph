@@ -470,11 +470,12 @@ def login():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    # If already logged in, redirect to home
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-    
-    if request.method == 'POST':
+    # Registration disabled - only admins can create users via CLI
+    flash('Registration is currently disabled.', 'error')
+    return redirect(url_for('login'))
+
+    # Original registration code kept for future use
+    if False and request.method == 'POST':
         username = request.form['username'].strip()
         email = request.form['email'].strip()
         password = request.form['password']
