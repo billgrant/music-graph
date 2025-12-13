@@ -1,34 +1,50 @@
 # Music Graph Project - Claude Context
 
-**Last Updated:** December 12, 2025 (Phase 8 Complete ✅)
+**Last Updated:** December 13, 2025 (Phase 9 Complete ✅ - WE'RE LIVE!)
 
 ## Project Overview
 
 Music Graph is a Flask web application that visualizes music genre hierarchies and band relationships as an interactive graph. Built as a learning project with AI-assisted development, documenting the journey through blog posts.
 
 **Live Sites:**
-- **Production:** https://music-graph.billgrant.io
+- **Production:** https://music-graph.billgrant.io (PUBLIC!)
 - **Development:** https://dev.music-graph.billgrant.io
 
+**Current Version:** v0.1.1-beta
+
 **Tech Stack:**
-- Python 3.12 + Flask
+- Python 3.12 + Flask + Gunicorn
 - PostgreSQL (production/dev) / SQLite (local)
 - Docker + docker-compose
+- GCP Secret Manager for credentials
 - Deployed on Google Cloud Platform (Compute Engine)
 - Terraform for infrastructure (with workspaces)
 - GitHub Actions for CI/CD
 - GitHub for version control
 - GitHub Issues for backlog/task tracking (no Jira needed for solo project)
 
-## Current Phase: Phase 9 (Planning)
+## Current Phase: Phase 10 (Planning)
 
-**Focus:** Infrastructure Modernization (Issue #10)
+**Focus:** UI Enhancements (Issue #21)
 
 **Planned:**
-- Remote Terraform state (GCS backend with locking)
-- Replace Flask dev server with Gunicorn
-- Immutable infrastructure with Packer images
-- Remove static secrets from repository
+- Detail panel showing all band/genre relationships (#15)
+- Graph scalability improvements (#16)
+- Base template pattern for HTML (#17)
+
+## Previous Phase: Phase 9 (Complete ✅) - GOING PUBLIC!
+
+**Focus:** Minimum viable changes to go public safely
+
+**Completed:**
+- ✅ Gunicorn replaces Flask dev server (2 workers)
+- ✅ Fixed logout bug (wrong decorator)
+- ✅ Hidden login UI, disabled registration
+- ✅ Rate limiting on login (5/minute via Flask-Limiter)
+- ✅ GCP Secret Manager for SECRET_KEY and POSTGRES_PASSWORD
+- ✅ Entrypoint fetches secrets via metadata server (no gcloud dependency)
+- ✅ Split firewall variables (web public, SSH restricted)
+- ✅ Site is now publicly accessible!
 
 ## Previous Phase: Phase 8 (Complete ✅)
 
