@@ -8,8 +8,11 @@ import tempfile
 _db_fd, _db_path = tempfile.mkstemp(suffix='.db')
 os.environ['DATABASE_URL'] = f'sqlite:///{_db_path}'
 
-from app import app as flask_app
+from app import app as flask_app, limiter
 from models import db, Genre, Band, User
+
+# Disable rate limiting for tests
+limiter.enabled = False
 
 
 @pytest.fixture
@@ -18,7 +21,8 @@ def app():
     flask_app.config.update({
         'TESTING': True,
         'SECRET_KEY': 'test-secret-key',
-        'WTF_CSRF_ENABLED': False
+        'WTF_CSRF_ENABLED': False,
+        'RATELIMIT_ENABLED': False  # Disable rate limiting during tests
     })
 
     with flask_app.app_context():

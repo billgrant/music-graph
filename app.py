@@ -4,6 +4,8 @@ from models import db, Genre, Band, User
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_migrate import Migrate
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from functools import wraps
 
 
@@ -23,6 +25,13 @@ migrate = Migrate(app, db)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'  # Where to redirect if not logged in
+
+# Initialize rate limiter (protects against brute force attacks)
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    storage_uri="memory://",
+)
 
 # User loader callback
 @login_manager.user_loader
@@ -439,6 +448,7 @@ def admin():
     return render_template('admin.html', genres=genres, bands=bands)
 
 @app.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
 def login():
     # If already logged in, redirect to home
     if current_user.is_authenticated:
