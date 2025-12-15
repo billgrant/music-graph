@@ -1,6 +1,6 @@
 # Music Graph Project - Claude Context
 
-**Last Updated:** December 13, 2025 (Phase 9 Complete ✅ - WE'RE LIVE!)
+**Last Updated:** December 15, 2025 (Phase 10 Complete ✅)
 
 ## Project Overview
 
@@ -10,7 +10,7 @@ Music Graph is a Flask web application that visualizes music genre hierarchies a
 - **Production:** https://music-graph.billgrant.io (PUBLIC!)
 - **Development:** https://dev.music-graph.billgrant.io
 
-**Current Version:** v0.1.1-beta
+**Current Version:** v0.1.2-beta
 
 **Tech Stack:**
 - Python 3.12 + Flask + Gunicorn
@@ -23,14 +23,26 @@ Music Graph is a Flask web application that visualizes music genre hierarchies a
 - GitHub for version control
 - GitHub Issues for backlog/task tracking (no Jira needed for solo project)
 
-## Current Phase: Phase 10 (Planning)
+## Current Phase: Phase 11 (Planning)
+
+**Focus:** Infrastructure Modernization (Issue #20)
+
+**Planned:**
+- Remote Terraform state (GCS backend)
+- Packer golden images for immutable infrastructure
+- Redis for rate limiting persistence
+- Automated dev database sync from production (#22)
+
+## Previous Phase: Phase 10 (Complete ✅)
 
 **Focus:** UI Enhancements (Issue #21)
 
-**Planned:**
-- Detail panel showing all band/genre relationships (#15)
-- Graph scalability improvements (#16)
-- Base template pattern for HTML (#17)
+**Completed:**
+- ✅ Base template pattern - Jinja2 inheritance for DRY templates (#17)
+- ✅ Detail panel showing all band/genre relationships (#15)
+- ✅ Generic panel renderer (extensible for future entity types)
+- ✅ Click-to-toggle panel behavior
+- ⏸️ Graph scalability (#16) - deferred pending user feedback
 
 ## Previous Phase: Phase 9 (Complete ✅) - GOING PUBLIC!
 
@@ -197,7 +209,6 @@ docker-compose -f docker-compose.prod.yml exec web python <migration_script>.py
 **Future Roadmap Items:**
 - Create REST API
 - Build custom MCP server for the API (learning exercise)
-- Genre/band detail views (click to see all relationships)
 - Recommendation engine
 
 ## Important Context

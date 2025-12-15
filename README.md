@@ -6,9 +6,17 @@ An interactive web application that visualizes music genres and bands as a conne
 
 Create a visual map showing how music genres relate to each other and which bands belong to which genres. Users can explore genre relationships and discover bands within each style of music.
 
-## Current Phase: Phase 10 - UI Enhancements (Planning)
+## Current Phase: Phase 11 - Infrastructure Modernization (Planning)
 
-Focus on improving user experience with detail panels and graph scalability.
+Focus on production-grade infrastructure with remote state, immutable deployments, and automated workflows.
+
+### Phase 10 Summary (Complete ✅)
+Phase 10 implemented UI enhancements to surface hidden relationship data:
+- Base template pattern using Jinja2 inheritance (DRY templates)
+- Detail panel showing all band/genre relationships (not just primary)
+- Generic panel renderer extensible for future entity types
+- Click-to-toggle panel behavior
+- Graph scalability (#16) deferred pending user feedback
 
 ### Phase 9 Summary (Complete ✅)
 Phase 9 took the site public with security-focused improvements:
@@ -208,24 +216,14 @@ Phase 4 successfully added authentication and authorization:
 
 ## Roadmap
 
-### Phase 10: UI Enhancements (Current)
-**Goal:** Improve user experience and graph usability
-
-**Planned:**
-- Detail panel showing all band/genre relationships
-- Graph scalability improvements
-- Base template pattern for cleaner HTML
-
-**Why:** Better UX for exploring relationships; cleaner codebase
-
-### Phase 11: Infrastructure Modernization
+### Phase 11: Infrastructure Modernization (Current)
 **Goal:** Production-grade infrastructure with immutable deployments
 
 **Planned:**
 - Remote Terraform state (GCS backend with locking)
 - Immutable infrastructure with Packer images (Issue #7)
 - Redis for rate limiting persistence
-- Automated database migrations
+- Automated dev database sync from production (Issue #22)
 
 **Why:** Reproducible infrastructure, learning modern DevOps patterns
 
@@ -343,6 +341,9 @@ This project is documented on my blog at [billgrant.io](https://billgrant.io).
 
 **Phase 9 Posts:**
 - [Going Public](https://billgrant.io/2025/12/13/phase-9-going-public/) - Gunicorn, rate limiting, GCP Secret Manager, public launch
+
+**Phase 10 Posts:**
+- [UI Enhancements](https://billgrant.io/2025/12/15/phase-10-ui-enhancements/) - Detail panel, base template, generic renderer
 
 **Workflow Posts:**
 - [Upgrading My AI Workflow with MCP](https://billgrant.io/2025/12/07/mcp-setup/) - Model Context Protocol setup for better file access
