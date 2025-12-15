@@ -218,8 +218,19 @@
 
     // === Detail Panel Functions ===
 
+    // Track what entity is currently shown in the panel
+    var currentPanelEntity = null;
+
     // Generic function to show detail panel for any entity type
     function showDetailPanel(entityType, entityId) {
+        var entityKey = entityType + ':' + entityId;
+
+        // If clicking the same entity that's already shown, close panel
+        if (currentPanelEntity === entityKey) {
+            closeDetailPanel();
+            return;
+        }
+
         // Look up entity data: entityType is 'band' or 'genre'
         // entityData.bands['pantera'] or entityData.genres['death-metal']
         var entityCollection = entityData[entityType + 's'];  // 'band' -> 'bands'
@@ -273,11 +284,13 @@
         // Insert HTML into panel and show it
         document.getElementById('panel-content').innerHTML = html;
         document.getElementById('detail-panel').classList.add('open');
+        currentPanelEntity = entityKey;  // Track what we're showing
     }
 
     // Close the detail panel
     function closeDetailPanel() {
         document.getElementById('detail-panel').classList.remove('open');
+        currentPanelEntity = null;  // Clear tracking
     }
 
     // Focus graph on a node and show its details
