@@ -46,6 +46,69 @@
     {% endfor %}
 ]);
 
+    // Entity data for detail panel (generic structure)
+    var entityData = {
+        bands: {
+            {% for band in bands %}
+            '{{ band.id }}': {
+                type: 'band',
+                name: '{{ band.name }}',
+                fields: [
+                    {
+                        label: 'Primary Genre',
+                        value: '{{ band.primary_genre.name }}',
+                        link: '{{ band.primary_genre_id }}'
+                    },
+                    {
+                        label: 'All Genres',
+                        values: [{% for g in band.genres %}'{{ g.name }}'{% if not loop.last %}, {% endif %}{% endfor %}],
+                        links: [{% for g in band.genres %}'{{ g.id }}'{% if not loop.last %}, {% endif %}{% endfor %}]
+                    }
+                ]
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        },
+        genres: {
+            {% for genre in genres %}
+            '{{ genre.id }}': {
+                type: 'genre',
+                name: '{{ genre.name }}',
+                fields: [
+                    {
+                        label: 'Type',
+                        value: '{{ genre.type }}',
+                        badge: true
+                    },
+                    {% if genre.parent %}
+                    {
+                        label: 'Primary Parent',
+                        value: '{{ genre.parent.name }}',
+                        link: '{{ genre.parent_id }}'
+                    },
+                    {% endif %}
+                    {% if genre.parent_genres %}
+                    {
+                        label: 'All Parents',
+                        values: [{% for p in genre.parent_genres %}'{{ p.name }}'{% if not loop.last %}, {% endif %}{% endfor %}],
+                        links: [{% for p in genre.parent_genres %}'{{ p.id }}'{% if not loop.last %}, {% endif %}{% endfor %}]
+                    },
+                    {% endif %}
+                    {
+                        label: 'Child Genres',
+                        values: [{% for c in genre.children %}'{{ c.name }}'{% if not loop.last %}, {% endif %}{% endfor %}],
+                        links: [{% for c in genre.children %}'{{ c.id }}'{% if not loop.last %}, {% endif %}{% endfor %}]
+                    },
+                    {
+                        label: 'Bands',
+                        values: [{% for b in genre.all_bands %}'{{ b.name }}'{% if not loop.last %}, {% endif %}{% endfor %}],
+                        links: [{% for b in genre.all_bands %}'{{ b.id }}'{% if not loop.last %}, {% endif %}{% endfor %}]
+                    }
+                ]
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        }
+    };
+
     // Connections between genres and from bands to genres
     var edges = new vis.DataSet([
         // Genre to genre connections
@@ -115,6 +178,7 @@
             // Check if it's a genre (not a band)
             if (clickedNode.group === 'genre') {
                 toggleGenre(clickedNodeId);
+                showGenreDetails(clickedNodeId);  // Also show genre details
             } else if (clickedNode.group === 'band') {
                 showBandDetails(clickedNodeId);
             }
@@ -152,10 +216,91 @@
         });
     }
 
-    // Placeholder for band details (we'll implement this later)
+    // === Detail Panel Functions ===
+
+    // Generic function to show detail panel for any entity type
+    function showDetailPanel(entityType, entityId) {
+        // Look up entity data: entityType is 'band' or 'genre'
+        // entityData.bands['pantera'] or entityData.genres['death-metal']
+        var entityCollection = entityData[entityType + 's'];  // 'band' -> 'bands'
+        var entity = entityCollection[entityId];
+
+        if (!entity) {
+            console.error('Entity not found:', entityType, entityId);
+            return;
+        }
+
+        // Build the HTML content
+        var html = '<h2>' + entity.name + '</h2>';
+
+        // Loop through each field and render based on its type
+        entity.fields.forEach(function(field) {
+            // Skip empty arrays (e.g., genre with no bands)
+            if (field.values && field.values.length === 0) {
+                return;  // Skip this field
+            }
+
+            html += '<div class="field">';
+            html += '<div class="field-label">' + field.label + '</div>';
+            html += '<div class="field-value">';
+
+            if (field.badge) {
+                // Render as a badge (like genre type: root/intermediate/leaf)
+                html += '<span class="badge badge-' + field.value + '">' + field.value + '</span>';
+
+            } else if (field.url) {
+                // External link (like Wikipedia)
+                html += '<a href="' + field.url + '" target="_blank">' + field.value + '</a>';
+
+            } else if (field.values && field.links) {
+                // List of clickable items (like all genres for a band)
+                field.values.forEach(function(val, i) {
+                    html += '<a href="#" onclick="focusAndShowPanel(\'' + field.links[i] + '\'); return false;">' + val + '</a>';
+                });
+
+            } else if (field.link) {
+                // Single clickable item (like primary genre)
+                html += '<a href="#" onclick="focusAndShowPanel(\'' + field.link + '\'); return false;">' + field.value + '</a>';
+
+            } else {
+                // Plain text
+                html += field.value;
+            }
+
+            html += '</div></div>';
+        });
+
+        // Insert HTML into panel and show it
+        document.getElementById('panel-content').innerHTML = html;
+        document.getElementById('detail-panel').classList.add('open');
+    }
+
+    // Close the detail panel
+    function closeDetailPanel() {
+        document.getElementById('detail-panel').classList.remove('open');
+    }
+
+    // Focus graph on a node and show its details
+    function focusAndShowPanel(nodeId) {
+        // Find what type of entity this is
+        var node = nodes.get(nodeId);
+        if (node) {
+            // Focus and select the node in the graph
+            network.focus(nodeId, { scale: 1.2, animation: true });
+            network.selectNodes([nodeId]);
+
+            // Show its detail panel
+            showDetailPanel(node.group, nodeId);  // group is 'band' or 'genre'
+        }
+    }
+
+    // Wrapper functions for click handlers
     function showBandDetails(bandId) {
-        console.log("Band clicked:", bandId);
-        // We'll add a modal/panel here later
+        showDetailPanel('band', bandId);
+    }
+
+    function showGenreDetails(genreId) {
+        showDetailPanel('genre', genreId);
     }
 </script>
 {% endblock %}

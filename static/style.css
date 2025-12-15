@@ -508,3 +508,73 @@ select[multiple] option:checked {
 .site-footer a:hover {
     text-decoration: underline;
 }
+
+/* Detail Panel - slides in from right */
+.detail-panel {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 400px;
+    height: 100vh;
+    background-color: #252525;
+    border-left: 2px solid #4CAF50;
+    padding: 20px;
+    padding-top: 60px;
+    overflow-y: auto;
+    z-index: 1001;
+    transition: right 0.3s ease;
+}
+
+.detail-panel.open {
+    right: 0;
+}
+
+.panel-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 5px 10px;
+    transition: color 0.2s;
+}
+
+.panel-close:hover {
+    color: #ffffff;
+}
+
+/* Panel content styling */
+#panel-content h2 {
+    color: #4CAF50;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #333;
+}
+
+#panel-content .field {
+    margin-bottom: 15px;
+}
+
+#panel-content .field-label {
+    color: #888;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+#panel-content .field-value {
+    color: #ffffff;
+}
+
+#panel-content .field-value a {
+    color: #4CAF50;
+    text-decoration: none;
+    margin-right: 8px;
+}
+
+#panel-content .field-value a:hover {
+    text-decoration: underline;
+}

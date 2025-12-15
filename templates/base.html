@@ -39,6 +39,14 @@
         {% block content %}{% endblock %}
     </div>
 
+    <!-- Detail Panel - slides in from right when clicking nodes -->
+    <div id="detail-panel" class="detail-panel">
+        <button class="panel-close" onclick="closeDetailPanel()">&times;</button>
+        <div id="panel-content">
+            <!-- JavaScript fills this dynamically -->
+        </div>
+    </div>
+
     <footer class="site-footer">
         <p>Built by <a href="https://github.com/billgrant" target="_blank">Bill Grant</a> | <a href="https://github.com/billgrant/music-graph" target="_blank">View on GitHub</a> | <a href="{{ url_for('login') }}">Admin</a></p>
     </footer>
