@@ -1,58 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Genre - Music Graph</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-<nav class="navbar">
-    <div class="nav-container">
-        <a href="{{ url_for('index') }}" class="nav-brand">Music Graph</a>
-<div class="nav-links">
-    {% if current_user.is_authenticated %}
-        {% if current_user.is_admin %}
-            <a href="{{ url_for('add_genre') }}" class="nav-link">Add Genre</a>
-            <a href="{{ url_for('add_band') }}" class="nav-link">Add Band</a>
-            <a href="{{ url_for('admin') }}" class="nav-link">Admin</a>
-        {% endif %}
-        <span class="nav-user">{{ current_user.username }}</span>
-        <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
-    {% endif %}
-</div>
-    </div>
-</nav>
-    <div class="container">
-        <h1>Add New Genre</h1>
-        
-        <!-- Flash Messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                <div class="flash-message flash-{{ category }}">
-                    {{ message }}
-                </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        
+{% extends "base.html" %}
+
+{% block title %}Add Genre{% endblock %}
+
+{% block content %}
+<h1>Add New Genre</h1>
+
 <form method="POST" class="form">
     <div class="form-group">
         <label for="name">Genre Name:</label>
-        <input type="text" id="name" name="name" 
+        <input type="text" id="name" name="name"
                value="{{ form_data.name if form_data else '' }}" required>
         <small>Display name (e.g., "Death Metal")</small>
     </div>
-    
+
     <div class="form-group">
         <label for="id">Genre ID (slug):</label>
-        <input type="text" id="id" name="id" 
-               value="{{ form_data.id if form_data else '' }}" 
+        <input type="text" id="id" name="id"
+               value="{{ form_data.id if form_data else '' }}"
                required pattern="[a-z0-9-]+" readonly>
         <small>Auto-generated from name. This will be the URL-friendly identifier.</small>
     </div>
-    
+
     <div class="form-group">
         <label for="type">Genre Type:</label>
         <select id="type" name="type" required>
@@ -69,13 +37,13 @@
         </select>
         <small>Bands can only be added to "leaf" genres</small>
     </div>
-    
+
     <div class="form-group">
         <label for="parent_id">Primary Parent Genre (optional):</label>
         <select id="parent_id" name="parent_id">
             <option value="">-- No Parent (Root Genre) --</option>
             {% for genre in genres %}
-            <option value="{{ genre.id }}" 
+            <option value="{{ genre.id }}"
                     {% if form_data and form_data.parent_id == genre.id %}selected{% endif %}>
                 {{ genre.name }}
             </option>
@@ -97,45 +65,43 @@
         </select>
         <small>Hold Ctrl (Cmd on Mac) to select multiple. Primary parent must be included in this list.</small>
     </div>
-    
+
     <div class="form-actions">
         <button type="submit" class="btn-primary">Add Genre</button>
         <a href="{{ url_for('index') }}" class="btn-secondary">Back to Graph</a>
     </div>
 </form>
-    </div>
-    
-    <script>
-        // Auto-generate slug from name
-        const nameInput = document.getElementById('name');
-        const idInput = document.getElementById('id');
-        
-        nameInput.addEventListener('input', function() {
-            // Convert name to slug: lowercase, replace spaces with hyphens, remove special chars
-            const slug = this.value
-                .toLowerCase()
-                .replace(/\s+/g, '-')           // spaces to hyphens
-                .replace(/[^a-z0-9-]/g, '')     // remove special chars
-                .replace(/-+/g, '-')            // collapse multiple hyphens
-                .replace(/^-|-$/g, '');         // trim hyphens from ends
-            
-            idInput.value = slug;
-        });
+{% endblock %}
 
-        // Auto-select primary parent in multi-select when changed
-        const primaryParentSelect = document.getElementById('parent_id');
-        const allParentsSelect = document.getElementById('parent_genres');
+{% block extra_scripts %}
+<script>
+    // Auto-generate slug from name
+    const nameInput = document.getElementById('name');
+    const idInput = document.getElementById('id');
 
-        primaryParentSelect.addEventListener('change', function() {
-            if (this.value) {
-                // Find and select the option in the multi-select
-                const option = allParentsSelect.querySelector(`option[value="${this.value}"]`);
-                if (option) {
-                    option.selected = true;
-                }
+    nameInput.addEventListener('input', function() {
+        const slug = this.value
+            .toLowerCase()
+            .replace(/\s+/g, '-')
+            .replace(/[^a-z0-9-]/g, '')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '');
+
+        idInput.value = slug;
+    });
+
+    // Auto-select primary parent in multi-select when changed
+    const primaryParentSelect = document.getElementById('parent_id');
+    const allParentsSelect = document.getElementById('parent_genres');
+
+    primaryParentSelect.addEventListener('change', function() {
+        if (this.value) {
+            const option = allParentsSelect.querySelector(`option[value="${this.value}"]`);
+            if (option) {
+                option.selected = true;
             }
-        });
-    </script>
-    <script src="{{ url_for('static', filename='js/filter.js') }}"></script>
-</body>
-</html>
+        }
+    });
+</script>
+<script src="{{ url_for('static', filename='js/filter.js') }}"></script>
+{% endblock %}

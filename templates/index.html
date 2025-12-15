@@ -1,186 +1,161 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Music Genre Graph</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <!-- Add Vis.js library from CDN -->
-    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
-</head>
-<body>
-<nav class="navbar">
-    <div class="nav-container">
-        <a href="{{ url_for('index') }}" class="nav-brand">Music Graph</a>
-<div class="nav-links">
-    {% if current_user.is_authenticated %}
-        {% if current_user.is_admin %}
-            <a href="{{ url_for('add_genre') }}" class="nav-link">Add Genre</a>
-            <a href="{{ url_for('add_band') }}" class="nav-link">Add Band</a>
-            <a href="{{ url_for('admin') }}" class="nav-link">Admin</a>
-        {% endif %}
-        <span class="nav-user">{{ current_user.username }}</span>
-        <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
-    {% endif %}
-</div>
-    </div>
-</nav>
-    <div class="container">
-        <h1>Music Genre Graph</h1>
-        <p class="subtitle">Exploring connections between genres and bands</p>
+{% block title %}Music Genre Graph{% endblock %}
 
-        <!-- This is the container where the graph will render -->
-        <div id="network-graph"></div>
+{% block extra_head %}
+<script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+{% endblock %}
 
-    <!-- JavaScript to create the graph -->
-    <script type="text/javascript">
+{% block content %}
+<h1>Music Genre Graph</h1>
+<p class="subtitle">Exploring connections between genres and bands</p>
 
-        // Genre and band nodes
-        var nodes = new vis.DataSet([
-            // Add genres - sized by hierarchy (root=large, intermediate=medium, leaf=small)
-            {% for genre in genres %}
-        {
-            id: '{{ genre.id }}',
-            label: '{{ genre.name }}',
-            shape: 'dot',
-            size: {% if genre.type == 'root' %}40{% elif genre.type == 'intermediate' %}25{% else %}15{% endif %},
-            color: '#4CAF50',
-            group: 'genre'
+<!-- This is the container where the graph will render -->
+<div id="network-graph"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script type="text/javascript">
+    // Genre and band nodes
+    var nodes = new vis.DataSet([
+        // Add genres - sized by hierarchy (root=large, intermediate=medium, leaf=small)
+        {% for genre in genres %}
+    {
+        id: '{{ genre.id }}',
+        label: '{{ genre.name }}',
+        shape: 'dot',
+        size: {% if genre.type == 'root' %}40{% elif genre.type == 'intermediate' %}25{% else %}15{% endif %},
+        color: '#4CAF50',
+        group: 'genre'
+    },
+    {% endfor %}
+    // Add bands (hidden by default)
+    {% for band in bands %}
+    {
+        id: '{{ band.id }}',
+        label: '{{ band.name }}',
+        shape: 'text',
+        font: {
+            color: '#ffffff',
+            size: 14
         },
-        {% endfor %}
-        // Add bands (hidden by default)
-        {% for band in bands %}
-        {
-            id: '{{ band.id }}',
-            label: '{{ band.name }}',
-            shape: 'text',
+        hidden: true,
+        group: 'band',
+        parentGenre: '{{ band.primary_genre_id }}'
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+]);
+
+    // Connections between genres and from bands to genres
+    var edges = new vis.DataSet([
+        // Genre to genre connections
+        {% for from_id, to_id in connections %}
+    { from: '{{ from_id }}', to: '{{ to_id }}' },
+    {% endfor %}
+    // Band to genre connections (primary only)
+    {% for band in bands %}
+    { from: '{{ band.id }}', to: '{{ band.primary_genre_id }}' }{% if not loop.last %},{% endif %}
+    {% endfor %}
+]);
+    // Container element
+    var container = document.getElementById('network-graph');
+
+    // Graph data
+    var data = {
+        nodes: nodes,
+        edges: edges
+    };
+
+    // Configuration options (like your network diagram layout settings)
+    var options = {
+        nodes: {
+            shape: 'dot',
             font: {
-                color: '#ffffff',
-                size: 14
+                size: 14,
+                color: '#ffffff'
             },
-            hidden: true,
-            group: 'band',
-            parentGenre: '{{ band.primary_genre_id }}'
-        }{% if not loop.last %},{% endif %}
-        {% endfor %}
-]);
-
-        // Connections between genres and from bands to genres
-        var edges = new vis.DataSet([
-            // Genre to genre connections
-            {% for from_id, to_id in connections %}
-        { from: '{{ from_id }}', to: '{{ to_id }}' },
-        {% endfor %}
-        // Band to genre connections (primary only)
-        {% for band in bands %}
-        { from: '{{ band.id }}', to: '{{ band.primary_genre_id }}' }{% if not loop.last %},{% endif %}
-        {% endfor %}
-]);
-        // Container element
-        var container = document.getElementById('network-graph');
-
-        // Graph data
-        var data = {
-            nodes: nodes,
-            edges: edges
-        };
-
-        // Configuration options (like your network diagram layout settings)
-        var options = {
-            nodes: {
-                shape: 'dot',
-                font: {
-                    size: 14,
-                    color: '#ffffff'
-                },
-                borderWidth: 2,
-                borderWidthSelected: 4,
-                scaling: {
-                    label: {
-                        enabled: false
-                    }
-                }
-            },
-            edges: {
-                width: 2,
-                color: {
-                    color: '#848484',
-                    highlight: '#4CAF50'
-                },
-                smooth: {
-                    type: 'continuous'
-                }
-            },
-            physics: {
-                enabled: true,
-                stabilization: {
-                    iterations: 200
+            borderWidth: 2,
+            borderWidthSelected: 4,
+            scaling: {
+                label: {
+                    enabled: false
                 }
             }
-        };
+        },
+        edges: {
+            width: 2,
+            color: {
+                color: '#848484',
+                highlight: '#4CAF50'
+            },
+            smooth: {
+                type: 'continuous'
+            }
+        },
+        physics: {
+            enabled: true,
+            stabilization: {
+                iterations: 200
+            }
+        }
+    };
 
-        // Create the network (this is like rendering your network topology)
-        var network = new vis.Network(container, data, options);
+    // Create the network (this is like rendering your network topology)
+    var network = new vis.Network(container, data, options);
 
-        // Track which genres are expanded
-        var expandedGenres = new Set();
+    // Track which genres are expanded
+    var expandedGenres = new Set();
 
-        // Add click event listener
-        network.on("click", function (params) {
-            if (params.nodes.length > 0) {
-                var clickedNodeId = params.nodes[0];
-                var clickedNode = nodes.get(clickedNodeId);
+    // Add click event listener
+    network.on("click", function (params) {
+        if (params.nodes.length > 0) {
+            var clickedNodeId = params.nodes[0];
+            var clickedNode = nodes.get(clickedNodeId);
 
-                // Check if it's a genre (not a band)
-                if (clickedNode.group === 'genre') {
-                    toggleGenre(clickedNodeId);
-                } else if (clickedNode.group === 'band') {
-                    showBandDetails(clickedNodeId);
-                }
+            // Check if it's a genre (not a band)
+            if (clickedNode.group === 'genre') {
+                toggleGenre(clickedNodeId);
+            } else if (clickedNode.group === 'band') {
+                showBandDetails(clickedNodeId);
+            }
+        }
+    });
+
+    // Function to expand/collapse a genre
+    function toggleGenre(genreId) {
+        if (expandedGenres.has(genreId)) {
+            // Collapse: hide bands for this genre
+            expandedGenres.delete(genreId);
+            hideBandsForGenre(genreId);
+        } else {
+            // Expand: show bands for this genre
+            expandedGenres.add(genreId);
+            showBandsForGenre(genreId);
+        }
+    }
+
+    // Show all bands that belong to a genre
+    function showBandsForGenre(genreId) {
+        nodes.forEach(function (node) {
+            if (node.group === 'band' && node.parentGenre === genreId) {
+                nodes.update({ id: node.id, hidden: false });
             }
         });
+    }
 
-        // Function to expand/collapse a genre
-        function toggleGenre(genreId) {
-            if (expandedGenres.has(genreId)) {
-                // Collapse: hide bands for this genre
-                expandedGenres.delete(genreId);
-                hideBandsForGenre(genreId);
-            } else {
-                // Expand: show bands for this genre
-                expandedGenres.add(genreId);
-                showBandsForGenre(genreId);
+    // Hide all bands that belong to a genre
+    function hideBandsForGenre(genreId) {
+        nodes.forEach(function (node) {
+            if (node.group === 'band' && node.parentGenre === genreId) {
+                nodes.update({ id: node.id, hidden: true });
             }
-        }
+        });
+    }
 
-        // Show all bands that belong to a genre
-        function showBandsForGenre(genreId) {
-            nodes.forEach(function (node) {
-                if (node.group === 'band' && node.parentGenre === genreId) {
-                    nodes.update({ id: node.id, hidden: false });
-                }
-            });
-        }
-
-        // Hide all bands that belong to a genre
-        function hideBandsForGenre(genreId) {
-            nodes.forEach(function (node) {
-                if (node.group === 'band' && node.parentGenre === genreId) {
-                    nodes.update({ id: node.id, hidden: true });
-                }
-            });
-        }
-
-        // Placeholder for band details (we'll implement this later)
-        function showBandDetails(bandId) {
-            console.log("Band clicked:", bandId);
-            // We'll add a modal/panel here later
-        }
-    </script>
-    <footer class="site-footer">
-        <p>Built by <a href="https://github.com/billgrant" target="_blank">Bill Grant</a> | <a href="https://github.com/billgrant/music-graph" target="_blank">View on GitHub</a> | <a href="{{ url_for('login') }}">Admin</a></p>
-    </footer>
-</body>
-
-</html>
+    // Placeholder for band details (we'll implement this later)
+    function showBandDetails(bandId) {
+        console.log("Band clicked:", bandId);
+        // We'll add a modal/panel here later
+    }
+</script>
+{% endblock %}

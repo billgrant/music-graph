@@ -1,115 +1,82 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Music Graph</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-<nav class="navbar">
-    <div class="nav-container">
-        <a href="{{ url_for('index') }}" class="nav-brand">Music Graph</a>
-<div class="nav-links">
-    {% if current_user.is_authenticated %}
-        {% if current_user.is_admin %}
-            <a href="{{ url_for('add_genre') }}" class="nav-link">Add Genre</a>
-            <a href="{{ url_for('add_band') }}" class="nav-link">Add Band</a>
-            <a href="{{ url_for('admin') }}" class="nav-link">Admin</a>
-        {% endif %}
-        <span class="nav-user">{{ current_user.username }}</span>
-        <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
-    {% endif %}
+{% extends "base.html" %}
+
+{% block title %}Admin{% endblock %}
+
+{% block content %}
+<h1>Admin Panel</h1>
+<div class="admin-actions" style="margin-bottom: 20px;">
+    <a href="{{ url_for('manage_users') }}" class="btn-primary">Manage Users</a>
 </div>
-    </div>
-</nav>
-    <div class="container">
-        <h1>Admin Panel</h1>
-        <div class="admin-actions" style="margin-bottom: 20px;">
-            <a href="{{ url_for('manage_users') }}" class="btn-primary">Manage Users</a>
-        </div>
-        <!-- Flash Messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                <div class="flash-message flash-{{ category }}">
-                    {{ message }}
-                </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        
-        <!-- Genres Section -->
-        <div class="admin-section">
-            <h2>Genres ({{ genres|length }})</h2>
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>ID</th>
-                        <th>Type</th>
-                        <th>Parent</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for genre in genres %}
-                    <tr>
-                        <td>{{ genre.name }}</td>
-                        <td><code>{{ genre.id }}</code></td>
-                        <td><span class="badge badge-{{ genre.type }}">{{ genre.type }}</span></td>
-                        <td>{{ genre.parent.name if genre.parent else '-' }}</td>
-                        <td class="actions">
-                            <a href="{{ url_for('edit_genre', genre_id=genre.id) }}" class="btn-edit">Edit</a>
-                            <form method="POST" action="{{ url_for('delete_genre', genre_id=genre.id) }}" 
-                                  style="display: inline;"
-                                  onsubmit="return confirm('Are you sure you want to delete {{ genre.name }}?');">
-                                <button type="submit" class="btn-delete">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
+
+<!-- Genres Section -->
+<div class="admin-section">
+    <h2>Genres ({{ genres|length }})</h2>
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Parent</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for genre in genres %}
+            <tr>
+                <td>{{ genre.name }}</td>
+                <td><code>{{ genre.id }}</code></td>
+                <td><span class="badge badge-{{ genre.type }}">{{ genre.type }}</span></td>
+                <td>{{ genre.parent.name if genre.parent else '-' }}</td>
+                <td class="actions">
+                    <a href="{{ url_for('edit_genre', genre_id=genre.id) }}" class="btn-edit">Edit</a>
+                    <form method="POST" action="{{ url_for('delete_genre', genre_id=genre.id) }}"
+                          style="display: inline;"
+                          onsubmit="return confirm('Are you sure you want to delete {{ genre.name }}?');">
+                        <button type="submit" class="btn-delete">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Bands Section -->
+<div class="admin-section">
+    <h2>Bands ({{ bands|length }})</h2>
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>ID</th>
+                <th>Primary Genre</th>
+                <th>All Genres</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for band in bands %}
+            <tr>
+                <td>{{ band.name }}</td>
+                <td><code>{{ band.id }}</code></td>
+                <td>{{ band.primary_genre.name }}</td>
+                <td>
+                    {% for genre in band.genres %}
+                        <span class="genre-tag">{{ genre.name }}</span>{% if not loop.last %}, {% endif %}
                     {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- Bands Section -->
-        <div class="admin-section">
-            <h2>Bands ({{ bands|length }})</h2>
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>ID</th>
-                        <th>Primary Genre</th>
-                        <th>All Genres</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for band in bands %}
-                    <tr>
-                        <td>{{ band.name }}</td>
-                        <td><code>{{ band.id }}</code></td>
-                        <td>{{ band.primary_genre.name }}</td>
-                        <td>
-                            {% for genre in band.genres %}
-                                <span class="genre-tag">{{ genre.name }}</span>{% if not loop.last %}, {% endif %}
-                            {% endfor %}
-                        </td>
-                        <td class="actions">
-                            <a href="{{ url_for('edit_band', band_id=band.id) }}" class="btn-edit">Edit</a>
-                            <form method="POST" action="{{ url_for('delete_band', band_id=band.id) }}" 
-                                  style="display: inline;"
-                                  onsubmit="return confirm('Are you sure you want to delete {{ band.name }}?');">
-                                <button type="submit" class="btn-delete">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</body>
-</html>
+                </td>
+                <td class="actions">
+                    <a href="{{ url_for('edit_band', band_id=band.id) }}" class="btn-edit">Edit</a>
+                    <form method="POST" action="{{ url_for('delete_band', band_id=band.id) }}"
+                          style="display: inline;"
+                          onsubmit="return confirm('Are you sure you want to delete {{ band.name }}?');">
+                        <button type="submit" class="btn-delete">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
