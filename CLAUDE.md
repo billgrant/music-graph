@@ -1,6 +1,6 @@
 # Music Graph Project - Claude Context
 
-**Last Updated:** December 16, 2025 (Phase 11 Planning)
+**Last Updated:** December 16, 2025 (Phase 11 In Progress - Cloud SQL Dev Complete)
 
 ## Project Overview
 
@@ -35,33 +35,43 @@ Future:   Cloud Run → (Flask container) → Cloud SQL
 
 ### Phase 11 Progress (December 16, 2025)
 
-**Completed:**
-- ✅ Google provider upgraded to ~> 6.0 (for ephemeral variables)
-- ✅ Terraform ephemeral variable pattern for DATABASE_URL (secret never in state)
+**Completed (Day 1):**
+- ✅ Google provider upgraded to ~> 6.0
+- ✅ Explored Terraform ephemeral variables for secrets (learned the pattern)
 - ✅ entrypoint.sh updated to fetch DATABASE_URL from Secret Manager
 - ✅ docker-compose.dev.yml updated to remove local db service
+- ✅ Cloud SQL dev instance provisioned (db-g1-small, ENTERPRISE edition, ~$9/mo)
+- ✅ Data migrated from prod PostgreSQL to Cloud SQL dev
+- ✅ Tested locally against Cloud SQL (works, but slow from local machine - expected)
+- ✅ Pushed changes, CI/CD deploying to dev VM
+- ✅ Cleaned up Neon-specific code (app.py search_path listener, debug_neon.py)
 
 **Attempted (Neon) - ABANDONED:**
 - Tried Neon free tier PostgreSQL
 - Cross-cloud latency (GCP → AWS) was unacceptable (~10-20ms per query)
-- Empty search_path issue required workarounds
+- Empty search_path issue required workarounds (pooler didn't support search_path in options)
 - Decision: Use Cloud SQL instead (same GCP region, ~1-2ms latency)
 
-**Files Changed (need review):**
-- `terraform/environments/main.tf` - Added DATABASE_URL secret with ephemeral var
-- `terraform/environments/variables.tf` - Added database_url ephemeral variable
-- `entrypoint.sh` - Fetches DATABASE_URL directly (good, keep this)
-- `docker-compose.dev.yml` - Removed db service (good for Cloud SQL)
-- `app.py` - Added search_path event listener (CLEANUP: remove, Neon-specific)
-- `debug_neon.py` - Debug script (CLEANUP: delete)
-
-**Next Steps:**
-1. Add Cloud SQL to Terraform (dev + prod instances)
-2. Clean up Neon-specific code (app.py search_path listener, debug_neon.py)
-3. Test dev environment with Cloud SQL
-4. Migrate data to Cloud SQL
+**TODO (Day 2):**
+1. Verify dev environment works with Cloud SQL (check https://dev.music-graph.billgrant.io)
+2. Investigate slow graph loading (5 sec locally - is it DB latency or vis.js rendering?)
+3. Apply Terraform for prod workspace (creates prod Cloud SQL instance)
+4. Migrate prod data to Cloud SQL prod
 5. Cut over production
-6. Then: Cloud Run migration
+6. Clean up obsolete files (see below)
+7. Then: Cloud Run migration (separate phase?)
+
+**Files to Clean Up (post-migration):**
+These files may no longer be needed after moving to managed Cloud SQL:
+- `verify-backup-setup.sh` - Was for VM-based PostgreSQL backup verification
+- `docker-compose.prod.yml` - Still has local db service, needs update like dev
+- Any backup scripts that assume local PostgreSQL container
+- Review `docs/database-backup-setup.md` - May need rewrite for Cloud SQL
+
+**Architecture Notes:**
+- Cloud SQL handles backups automatically (enabled for prod, 7-day retention)
+- No more local PostgreSQL container to manage
+- DATABASE_URL now fetched from Secret Manager (constructed by Terraform from Cloud SQL outputs)
 
 **Note:** Packer golden images (#7) no longer needed with serverless approach.
 
