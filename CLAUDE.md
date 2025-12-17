@@ -25,7 +25,19 @@ Music Graph is a Flask web application that visualizes music genre hierarchies a
 
 ## Current Phase: Phase 11 (In Progress)
 
-**Focus:** Serverless Migration + Security (Issue #25)
+**Focus:** Serverless Migration + Security
+**Tracking:** [GitHub Issue #25](https://github.com/billgrant/music-graph/issues/25)
+
+**Full Scope (from Issue #25):**
+- [ ] Move database to managed service (Cloud SQL) ← IN PROGRESS
+- [ ] Deploy Flask app to Cloud Run
+- [ ] Update Terraform for new architecture
+- [ ] Update CI/CD pipeline for Cloud Run deployments
+- [ ] Decommission current Compute Engine VM
+- [ ] Fix vis.js CVE (#24 - incorporated)
+- [ ] Evaluate container base image
+- [ ] Add container image scanning to CI/CD
+- [ ] Update documentation
 
 **Architecture Change:**
 ```
@@ -45,6 +57,7 @@ Future:   Cloud Run → (Flask container) → Cloud SQL
 - ✅ Tested locally against Cloud SQL (works, but slow from local machine - expected)
 - ✅ Pushed changes, CI/CD deploying to dev VM
 - ✅ Cleaned up Neon-specific code (app.py search_path listener, debug_neon.py)
+- ✅ Dev environment verified working - **fast** (GCP VM → GCP Cloud SQL, same region)
 
 **Attempted (Neon) - ABANDONED:**
 - Tried Neon free tier PostgreSQL
@@ -53,13 +66,13 @@ Future:   Cloud Run → (Flask container) → Cloud SQL
 - Decision: Use Cloud SQL instead (same GCP region, ~1-2ms latency)
 
 **TODO (Day 2):**
-1. Verify dev environment works with Cloud SQL (check https://dev.music-graph.billgrant.io)
-2. Investigate slow graph loading (5 sec locally - is it DB latency or vis.js rendering?)
-3. Apply Terraform for prod workspace (creates prod Cloud SQL instance)
-4. Migrate prod data to Cloud SQL prod
+1. ~~Verify dev environment works with Cloud SQL~~ ✅ Confirmed fast!
+2. Apply Terraform for prod workspace (creates prod Cloud SQL instance)
+3. Migrate prod data to Cloud SQL prod
+4. Update docker-compose.prod.yml (remove local db service like dev)
 5. Cut over production
 6. Clean up obsolete files (see below)
-7. Then: Cloud Run migration (separate phase?)
+7. Continue with Cloud Run migration per Issue #25 scope
 
 **Files to Clean Up (post-migration):**
 These files may no longer be needed after moving to managed Cloud SQL:
