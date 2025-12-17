@@ -1,351 +1,196 @@
-# Database Backup Setup Guide
+# Cloud SQL Backup & Restore Guide
 
-This guide documents the one-time setup required for automated database backups on each VM.
+This guide documents the backup and restore procedures for the Cloud SQL PostgreSQL database.
 
 ## Overview
 
-**What gets backed up:** PostgreSQL database from Docker container
-**Where:** Google Cloud Storage bucket `gs://music-graph-backups-music-graph-479719/`
-**When:** Daily at 3:00 AM (via cron)
-**Retention:** 7 days (automatic deletion via GCS lifecycle policy)
+**Database:** Cloud SQL PostgreSQL 16
+**Backup Type:** Automated daily backups (managed by Cloud SQL)
+**Retention:** 7 days
+**Point-in-Time Recovery:** Enabled for production
 
-## Prerequisites
+## Backup Configuration
 
-- ✅ GCS bucket created (via Terraform in `terraform/project/`)
-- ✅ Backup script deployed (`backup-database.sh`)
-- ✅ VM has service account with GCS write permissions
+Cloud SQL backups are configured via Terraform in `terraform/environments/main.tf`:
 
-## One-Time Setup (Per VM)
+```hcl
+backup_configuration {
+  enabled                        = var.environment == "prod" ? true : false
+  point_in_time_recovery_enabled = var.environment == "prod" ? true : false
+  start_time                     = "03:00"  # 3 AM UTC
+  backup_retention_settings {
+    retained_backups = 7
+  }
+}
+```
 
-Perform these steps on **each VM** (dev and prod):
+**Production:**
+- Daily automated backups at 3 AM UTC
+- Point-in-time recovery enabled (can restore to any point in the last 7 days)
+- 7-day retention
 
-### Step 1: Create Log File
+**Development:**
+- No automated backups (cost savings)
+- Can be manually backed up if needed
 
-The backup script writes to `/var/log/music-graph-backup.log`. Create it with proper permissions:
+## Viewing Backups
+
+### Via Google Cloud Console
+
+1. Go to [Cloud SQL Instances](https://console.cloud.google.com/sql/instances)
+2. Click on `music-graph-prod`
+3. Go to **Backups** tab
+4. View available backups and their timestamps
+
+### Via gcloud CLI
 
 ```bash
-sudo touch /var/log/music-graph-backup.log
-sudo chown billgrant:billgrant /var/log/music-graph-backup.log
+# List backups for production
+gcloud sql backups list --instance=music-graph-prod
+
+# List backups for dev (if any)
+gcloud sql backups list --instance=music-graph-dev
 ```
 
-**Alternative:** Use home directory logs (script will auto-adjust)
+## Restore Procedures
 
-### Step 2: Verify Docker Group Membership
+### Option 1: Restore to Same Instance (In-Place)
 
-The script needs to run `docker-compose` commands without sudo.
-
-```bash
-# Check if user is in docker group
-groups billgrant
-
-# Should output: billgrant ... docker ...
-```
-
-If `docker` is **not** in the list:
-
-```bash
-sudo usermod -aG docker billgrant
-# Then logout and login for it to take effect
-```
-
-### Step 3: Setup Cron Job
-
-Add automated backup to user's crontab:
-
-```bash
-crontab -e
-```
-
-Add this line (**replace `ENV` with `dev` or `prod`**):
-
-```cron
-# Daily database backup at 3:00 AM
-0 3 * * * /home/billgrant/music-graph/backup-database.sh ENV >> /var/log/music-graph-backup-cron.log 2>&1
-```
-
-**Dev VM example:**
-```cron
-0 3 * * * /home/billgrant/music-graph/backup-database.sh dev >> /var/log/music-graph-backup-cron.log 2>&1
-```
-
-**Prod VM example:**
-```cron
-0 3 * * * /home/billgrant/music-graph/backup-database.sh prod >> /var/log/music-graph-backup-cron.log 2>&1
-```
-
-Save and exit the editor.
-
-### Step 4: Verify Configuration
-
-Run the verification script to check everything is configured correctly:
-
-```bash
-cd ~/music-graph
-./verify-backup-setup.sh dev  # or 'prod'
-```
-
-Expected output:
-```
-=== Database Backup Configuration Verification ===
-
-Checking backup script... ✓ PASS
-Checking log file permissions... ✓ PASS
-Checking docker group membership... ✓ PASS
-Checking docker daemon... ✓ PASS
-Checking docker-compose file... ✓ PASS
-Checking database container... ✓ PASS
-Checking GCS bucket access... ✓ PASS
-Checking cron job... ✓ PASS
-Checking gsutil availability... ✓ PASS
-
-=== Summary ===
-Passed: 9
-
-All checks passed! Backup system is properly configured.
-```
-
-### Step 5: Test Manual Backup
-
-Run a manual backup to verify everything works:
-
-```bash
-cd ~/music-graph
-./backup-database.sh dev  # or 'prod'
-```
-
-Expected output:
-```
-[Date] Starting database backup for dev environment
-[Date] Running pg_dump...
-[Date] Backup created: 5.2M
-[Date] Compressing backup...
-[Date] Compressed to: 524K
-[Date] Uploading to GCS...
-[Date] ✓ Backup uploaded successfully
-[Date] Local backup cleaned up
-[Date] Recent backups in GCS:
-[Date] Backup complete!
-```
-
-Verify the backup in GCS:
-
-```bash
-gsutil ls gs://music-graph-backups-music-graph-479719/dev/
-# or
-gsutil ls gs://music-graph-backups-music-graph-479719/prod/
-```
-
----
-
-## Monitoring & Maintenance
-
-### Check Backup Logs
-
-**Main backup log:**
-```bash
-tail -f /var/log/music-graph-backup.log
-```
-
-**Cron output log:**
-```bash
-tail -f /var/log/music-graph-backup-cron.log
-```
-
-### List Available Backups
-
-```bash
-# Dev backups
-gsutil ls -lh gs://music-graph-backups-music-graph-479719/dev/
-
-# Prod backups
-gsutil ls -lh gs://music-graph-backups-music-graph-479719/prod/
-```
-
-### Verify Cron Job is Running
-
-```bash
-# List current user's cron jobs
-crontab -l
-
-# Check recent cron execution in system logs
-sudo grep CRON /var/log/syslog | grep backup-database
-```
-
----
-
-## Restore Procedure
-
-**✅ Tested and Verified:** December 11, 2025 on dev environment
-
-The backup script uses `pg_dump --clean --if-exists` which includes DROP TABLE statements, allowing restores over existing databases without conflicts.
-
-If you need to restore from a backup:
-
-### 1. Download Backup from GCS
+**WARNING:** This overwrites the current database!
 
 ```bash
 # List available backups
-gsutil ls gs://music-graph-backups-music-graph-479719/prod/
+gcloud sql backups list --instance=music-graph-prod
 
-# Download desired backup
-gsutil cp gs://music-graph-backups-music-graph-479719/prod/backup-20251211-030000.sql.gz ~/
+# Restore from a specific backup
+gcloud sql backups restore BACKUP_ID \
+  --restore-instance=music-graph-prod
 ```
 
-### 2. Decompress
+The instance will be unavailable during the restore (typically a few minutes).
+
+### Option 2: Point-in-Time Recovery (Production Only)
+
+Restore to a specific point in time within the last 7 days:
 
 ```bash
-gunzip backup-20251211-030000.sql.gz
+# Create a new instance from point-in-time recovery
+gcloud sql instances clone music-graph-prod music-graph-prod-restored \
+  --point-in-time="2025-12-17T10:00:00Z"
 ```
 
-### 3. Restore to Database
+This creates a NEW instance with the restored data. You can then:
+1. Verify the data on the new instance
+2. Update the DATABASE_URL secret to point to the new instance
+3. Delete the old instance (or keep as archive)
 
-**IMPORTANT:** This will **overwrite** the current database!
+### Option 3: Restore to New Instance
+
+Create a new instance from a backup (useful for testing or disaster recovery):
 
 ```bash
-cd ~/music-graph
+# Get backup ID
+gcloud sql backups list --instance=music-graph-prod
 
-# Stop the application
-docker-compose -f docker-compose.prod.yml stop web
-
-# Restore database
-docker-compose -f docker-compose.prod.yml exec -T db \
-  psql -U musicgraph musicgraph < ~/backup-20251211-030000.sql
-
-# Restart application
-docker-compose -f docker-compose.prod.yml start web
+# Restore to a new instance
+gcloud sql instances restore-backup music-graph-prod-new \
+  --backup-instance=music-graph-prod \
+  --backup-id=BACKUP_ID
 ```
 
-### 4. Verify Restore
+## Manual Backup (On-Demand)
 
-Check that data was restored correctly:
+If you need to create an immediate backup before a risky operation:
 
 ```bash
-docker-compose -f docker-compose.prod.yml exec db \
-  psql -U musicgraph musicgraph -c "SELECT COUNT(*) FROM genres;"
+# Create on-demand backup
+gcloud sql backups create --instance=music-graph-prod
+
+# Verify it was created
+gcloud sql backups list --instance=music-graph-prod
 ```
 
----
+## Export Database (For Migration or Archive)
 
-## Troubleshooting
+Export the database to Cloud Storage for long-term archival or migration:
 
-### Backup Script Fails
-
-**Check docker permissions:**
 ```bash
-docker ps  # Should work without sudo
+# Export to GCS bucket
+gcloud sql export sql music-graph-prod \
+  gs://music-graph-backups-music-graph-479719/exports/manual-export-$(date +%Y%m%d).sql \
+  --database=musicgraph
 ```
 
-**Check GCS access:**
+## Import Database
+
+Import from a SQL file (useful for migration or seeding):
+
 ```bash
-gsutil ls gs://music-graph-backups-music-graph-479719/
+# Import from GCS
+gcloud sql import sql music-graph-prod \
+  gs://music-graph-backups-music-graph-479719/exports/backup.sql \
+  --database=musicgraph
 ```
 
-**Check database container:**
+## Disaster Recovery Runbook
+
+### Scenario: Production Database Corrupted
+
+1. **Assess the damage:** Determine when the corruption occurred
+2. **Choose restore method:**
+   - If you know the exact time: Use point-in-time recovery
+   - If you want a specific backup: Use backup restore
+3. **Notify users:** Site may be unavailable during restore
+4. **Perform restore:** Follow procedures above
+5. **Verify:** Check data integrity after restore
+6. **Update secrets if needed:** If restored to new instance, update Secret Manager
+
+### Scenario: Accidental Data Deletion
+
+1. **Stop the bleeding:** If app is still running and could cause more damage, stop it:
+   ```bash
+   docker-compose -f docker-compose.prod.yml down
+   ```
+2. **Identify when data was deleted**
+3. **Use point-in-time recovery** to restore to just before the deletion
+4. **Verify restored data**
+5. **Restart application**
+
+## Monitoring
+
+### Check Backup Status
+
 ```bash
-docker-compose -f docker-compose.dev.yml ps db
+# Recent backup operations
+gcloud sql operations list --instance=music-graph-prod --filter="operationType:BACKUP"
 ```
 
-### Cron Job Not Running
+### Set Up Alerts (Optional)
 
-**Check cron service:**
-```bash
-sudo systemctl status cron
-```
+Consider setting up Cloud Monitoring alerts for:
+- Backup failures
+- Storage usage approaching limits
+- Instance availability
 
-**Check crontab:**
-```bash
-crontab -l | grep backup
-```
+## Cost Considerations
 
-**Check cron logs:**
-```bash
-sudo grep CRON /var/log/syslog | tail -20
-```
+- **Backup storage:** Charged per GB/month (~$0.08/GB)
+- **Point-in-time recovery:** Requires additional storage for transaction logs
+- **Estimated cost:** ~$1-2/month for this workload
 
-### Backups Not Appearing in GCS
+## Previous Backup System (Archived)
 
-**Check bucket permissions:**
-```bash
-# Test write permission
-echo "test" | gsutil cp - gs://music-graph-backups-music-graph-479719/test.txt
-gsutil rm gs://music-graph-backups-music-graph-479719/test.txt
-```
+The previous backup system used:
+- `backup-database.sh` - Cron script that ran pg_dump in Docker container
+- `verify-backup-setup.sh` - Verification script for backup configuration
+- GCS bucket for storing compressed SQL dumps
 
-**Check service account:**
-```bash
-gcloud auth list
-```
-
----
-
-## New VM Checklist
-
-When provisioning a new VM, complete these steps:
-
-- [ ] Pull latest code: `git clone` or `git pull`
-- [ ] Run verification: `./verify-backup-setup.sh [dev|prod]`
-- [ ] Fix any failed checks
-- [ ] Create log file (Step 1)
-- [ ] Verify docker group (Step 2)
-- [ ] Setup cron job (Step 3)
-- [ ] Test manual backup (Step 5)
-- [ ] Verify backup appears in GCS
-- [ ] Wait 24 hours and verify automated backup ran
+These scripts were removed in Phase 11 as Cloud SQL handles backups automatically with better reliability and point-in-time recovery capabilities.
 
 ---
 
 ## Related Documentation
 
-- Terraform GCS bucket: `terraform/project/main.tf`
-- Backup script: `backup-database.sh`
-- Verification script: `verify-backup-setup.sh`
-- GCS lifecycle policy: 7-day retention (configured in Terraform)
-
----
-
-## Restore Test Results
-
-**Date:** December 11, 2025
-**Environment:** Dev
-**Tester:** Bill Grant
-
-### Test Procedure
-
-1. **Baseline:** Counted existing genres and bands in database
-2. **Backup:** Created backup using `./backup-database.sh dev`
-3. **Destructive Change:** Deleted "Death Metal" genre to simulate data loss
-4. **Restore:** Downloaded backup from GCS and restored to database
-5. **Verification:** Confirmed deleted genre was restored
-
-### Results
-
-✅ **Restore Successful**
-
-- Backup download: ~500KB compressed file
-- Restore time: < 30 seconds
-- Data integrity: 100% - all deleted data recovered
-- No errors or conflicts during restore
-- Application remained functional throughout process
-
-### Key Learnings
-
-1. **--clean --if-exists flags are essential** - Allow restoring over existing database without dropping it first
-2. **Only stop web container** - Database container stays running during restore
-3. **Backups include DROP statements** - No duplicate key errors
-4. **Quick recovery** - Entire restore process takes < 2 minutes including download
-
-### Conclusion
-
-Backup and restore system is **production-ready**. Successfully tested disaster recovery scenario with complete data recovery.
-
----
-
-## Future Improvements (Phase 8+)
-
-When implementing immutable infrastructure (Issue #10):
-
-- [ ] Bake backup configuration into Packer image
-- [ ] Automate cron setup in startup script
-- [ ] Add monitoring/alerting for backup failures
-- [ ] Implement point-in-time recovery
-- [ ] Consider Cloud SQL managed database
+- Terraform configuration: `terraform/environments/main.tf`
+- [Cloud SQL Backup Documentation](https://cloud.google.com/sql/docs/postgres/backup-recovery/backups)
+- [Point-in-Time Recovery](https://cloud.google.com/sql/docs/postgres/backup-recovery/pitr)

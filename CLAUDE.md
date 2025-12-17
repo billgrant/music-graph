@@ -1,6 +1,6 @@
 # Music Graph Project - Claude Context
 
-**Last Updated:** December 16, 2025 (Phase 11 In Progress - Cloud SQL Dev Complete)
+**Last Updated:** December 17, 2025 (Phase 11 In Progress - Cloud SQL Complete)
 
 ## Project Overview
 
@@ -35,11 +35,13 @@ Music Graph is a Flask web application that visualizes music genre hierarchies a
 **Tracking:** [GitHub Issue #25](https://github.com/billgrant/music-graph/issues/25)
 
 **Full Scope (from Issue #25):**
-- [ ] Move database to managed service (Cloud SQL) ← IN PROGRESS
+- [x] Move database to managed service (Cloud SQL) ✅ COMPLETE
+- [x] Update example env files for Secret Manager
+- [x] Document Cloud SQL backup/restore strategy
 - [ ] Deploy Flask app to Cloud Run
-- [ ] Update Terraform for new architecture
+- [ ] Update Terraform for Cloud Run architecture
 - [ ] Update CI/CD pipeline for Cloud Run deployments
-- [ ] Decommission current Compute Engine VM
+- [ ] Decommission current Compute Engine VMs
 - [ ] Fix vis.js CVE (#24 - incorporated)
 - [ ] Evaluate container base image
 - [ ] Add container image scanning to CI/CD
@@ -51,9 +53,9 @@ Current:  VM → docker-compose → (Flask + PostgreSQL containers)
 Future:   Cloud Run → (Flask container) → Cloud SQL
 ```
 
-### Phase 11 Progress (December 16, 2025)
+### Phase 11 Progress
 
-**Completed (Day 1):**
+**Completed (Day 1 - December 16, 2025):**
 - ✅ Google provider upgraded to ~> 6.0
 - ✅ Explored Terraform ephemeral variables for secrets (learned the pattern)
 - ✅ entrypoint.sh updated to fetch DATABASE_URL from Secret Manager
@@ -65,32 +67,39 @@ Future:   Cloud Run → (Flask container) → Cloud SQL
 - ✅ Cleaned up Neon-specific code (app.py search_path listener, debug_neon.py)
 - ✅ Dev environment verified working - **fast** (GCP VM → GCP Cloud SQL, same region)
 
+**Completed (Day 2 - December 17, 2025):**
+- ✅ Cloud SQL prod instance provisioned
+- ✅ Data migrated from prod PostgreSQL container to Cloud SQL prod
+- ✅ docker-compose files updated: `network_mode: host` for GCP metadata server access
+- ✅ Dockerfile updated: added `curl` for Secret Manager API calls
+- ✅ Both dev and prod verified working with Cloud SQL
+- ✅ Removed obsolete backup scripts (`backup-database.sh`, `verify-backup-setup.sh`)
+- ✅ Updated example env files (removed DATABASE_URL/POSTGRES_PASSWORD - now from Secret Manager)
+- ✅ Documented Cloud SQL backup/restore strategy
+
 **Attempted (Neon) - ABANDONED:**
 - Tried Neon free tier PostgreSQL
 - Cross-cloud latency (GCP → AWS) was unacceptable (~10-20ms per query)
 - Empty search_path issue required workarounds (pooler didn't support search_path in options)
 - Decision: Use Cloud SQL instead (same GCP region, ~1-2ms latency)
 
-**TODO (Day 2):**
-1. ~~Verify dev environment works with Cloud SQL~~ ✅ Confirmed fast!
-2. Apply Terraform for prod workspace (creates prod Cloud SQL instance)
-3. Migrate prod data to Cloud SQL prod
-4. Update docker-compose.prod.yml (remove local db service like dev)
-5. Cut over production
-6. Clean up obsolete files (see below)
-7. Continue with Cloud Run migration per Issue #25 scope
-
-**Files to Clean Up (post-migration):**
-These files may no longer be needed after moving to managed Cloud SQL:
-- `verify-backup-setup.sh` - Was for VM-based PostgreSQL backup verification
-- `docker-compose.prod.yml` - Still has local db service, needs update like dev
-- Any backup scripts that assume local PostgreSQL container
-- Review `docs/database-backup-setup.md` - May need rewrite for Cloud SQL
+**Key Learnings:**
+- Docker containers need `network_mode: host` to access GCP metadata server at `169.254.169.254`
+- Container image needs `curl` to call Secret Manager API
+- Cloud SQL ENTERPRISE edition required for smaller tiers (db-g1-small)
 
 **Architecture Notes:**
-- Cloud SQL handles backups automatically (enabled for prod, 7-day retention)
+- Cloud SQL handles backups automatically (enabled for prod, 7-day retention, point-in-time recovery)
 - No more local PostgreSQL container to manage
-- DATABASE_URL now fetched from Secret Manager (constructed by Terraform from Cloud SQL outputs)
+- DATABASE_URL fetched from Secret Manager at container startup
+- Secret Manager secrets constructed by Terraform from Cloud SQL outputs
+
+**Next Steps (Cloud Run Migration):**
+1. Deploy Flask app to Cloud Run
+2. Update Terraform for Cloud Run architecture
+3. Update CI/CD for Cloud Run deployments
+4. Decommission Compute Engine VMs
+5. Address vis.js CVE (#24)
 
 **Note:** Packer golden images (#7) no longer needed with serverless approach.
 
