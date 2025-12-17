@@ -10,14 +10,20 @@ Music Graph is a Flask web application that visualizes music genre hierarchies a
 - **Production:** https://music-graph.billgrant.io (PUBLIC!)
 - **Development:** https://dev.music-graph.billgrant.io
 
-**Current Version:** v0.1.2-beta
+**Current Version:** v0.3.0-beta (Phase 11 - Cloud SQL)
+
+**Versioning Strategy:**
+- Format: `v0.X.Y-beta` where X = phase, Y = fixes within phase
+- Phase releases (v0.X.0) are major milestones, kept forever in GCR
+- Y increments for changes/fixes before moving to next phase
+- Example: Phase 11 = v0.3.0-beta, fixes would be v0.3.1-beta, v0.3.2-beta, etc.
 
 **Tech Stack:**
 - Python 3.12 + Flask + Gunicorn
-- PostgreSQL (production/dev) / SQLite (local)
+- Cloud SQL PostgreSQL (production/dev) / SQLite (local)
 - Docker + docker-compose
 - GCP Secret Manager for credentials
-- Deployed on Google Cloud Platform (Compute Engine)
+- Deployed on Google Cloud Platform (Compute Engine → Cloud Run planned)
 - Terraform for infrastructure (with workspaces)
 - GitHub Actions for CI/CD
 - GitHub for version control
@@ -274,6 +280,8 @@ docker-compose -f docker-compose.prod.yml exec web python <migration_script>.py
 - #27: REST API + MCP Server
 - #28: Recommendation engine
 - #29: Observability (metrics, logs, traces)
+- #30: Troubleshooting toolkit container
+- #31: Database credential management (rotation, dynamic secrets, or passwordless)
 
 ## Important Context
 
@@ -359,6 +367,8 @@ docker-compose -f docker-compose.prod.yml exec web python <command>
 - Don't assume Flask dev server is production-ready (it's not)
 - Don't forget to rebuild Docker containers after code changes
 - Don't commit secrets or passwords to git
+- **Don't create GitHub issues without adding them to CLAUDE.md** (Known Issues section)
+- **Don't close GitHub issues without updating CLAUDE.md** (move to Completed/Obsolete section)
 
 ## Communication Style
 

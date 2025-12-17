@@ -2,10 +2,11 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install system dependencies including PostgreSQL client
+# Install system dependencies including PostgreSQL client and curl for GCP metadata
 RUN apt-get update && apt-get install -y \
     gcc \
     postgresql-client \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .

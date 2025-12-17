@@ -3,8 +3,7 @@ services:
     image: gcr.io/music-graph-479719/music-graph:production
     env_file:
       - .env.prod
-    ports:
-      - "127.0.0.1:5000:5000"  # Only localhost (Nginx will proxy)
+    network_mode: host  # Required for GCP metadata server access
     restart: unless-stopped
     environment:
       - ENVIRONMENT=prod
