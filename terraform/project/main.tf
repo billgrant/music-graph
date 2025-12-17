@@ -4,7 +4,7 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 5.0"
+      version = "~> 6.0"
     }
     aws = {
       source  = "hashicorp/aws"
@@ -21,6 +21,12 @@ provider "google" {
 # Enable Secret Manager API
 resource "google_project_service" "secretmanager" {
   service            = "secretmanager.googleapis.com"
+  disable_on_destroy = false
+}
+
+# Enable Cloud SQL Admin API
+resource "google_project_service" "sqladmin" {
+  service            = "sqladmin.googleapis.com"
   disable_on_destroy = false
 }
 

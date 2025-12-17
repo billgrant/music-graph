@@ -20,3 +20,19 @@ output "secret_db_password_name" {
   description = "Secret Manager secret name for PostgreSQL password"
   value       = google_secret_manager_secret.postgres_password.secret_id
 }
+
+# Cloud SQL outputs
+output "cloud_sql_instance_name" {
+  description = "Cloud SQL instance name"
+  value       = google_sql_database_instance.music_graph.name
+}
+
+output "cloud_sql_public_ip" {
+  description = "Cloud SQL public IP address"
+  value       = google_sql_database_instance.music_graph.public_ip_address
+}
+
+output "cloud_sql_connection_name" {
+  description = "Cloud SQL connection name (for Cloud SQL Proxy)"
+  value       = google_sql_database_instance.music_graph.connection_name
+}

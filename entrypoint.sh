@@ -36,10 +36,7 @@ if curl -s -f -m 2 "http://metadata.google.internal/computeMetadata/v1/" -H "Met
 
     # Fetch secrets
     export SECRET_KEY=$(fetch_gcp_secret "music-graph-${ENV}-secret-key" "$PROJECT_ID" "$TOKEN")
-    export POSTGRES_PASSWORD=$(fetch_gcp_secret "music-graph-${ENV}-db-password" "$PROJECT_ID" "$TOKEN")
-
-    # Construct DATABASE_URL using the fetched password
-    export DATABASE_URL="postgresql://musicgraph:${POSTGRES_PASSWORD}@db:5432/musicgraph"
+    export DATABASE_URL=$(fetch_gcp_secret "music-graph-${ENV}-database-url" "$PROJECT_ID" "$TOKEN")
 
     echo "Secrets loaded from Secret Manager"
 else
@@ -51,7 +48,13 @@ fi
 # =============================================================================
 
 echo "Waiting for PostgreSQL..."
-until PGPASSWORD=$POSTGRES_PASSWORD psql -h "db" -U "musicgraph" -c '\q' 2>/dev/null; do
+until python3 -c "
+from sqlalchemy import create_engine, text
+import os
+engine = create_engine(os.environ['DATABASE_URL'])
+with engine.connect() as conn:
+    conn.execute(text('SELECT 1'))
+" 2>/dev/null; do
   echo "Waiting for database connection..."
   sleep 1
 done

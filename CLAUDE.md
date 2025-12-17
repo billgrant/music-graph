@@ -1,6 +1,6 @@
 # Music Graph Project - Claude Context
 
-**Last Updated:** December 15, 2025 (Phase 10 Complete ✅)
+**Last Updated:** December 16, 2025 (Phase 11 Planning)
 
 ## Project Overview
 
@@ -23,15 +23,47 @@ Music Graph is a Flask web application that visualizes music genre hierarchies a
 - GitHub for version control
 - GitHub Issues for backlog/task tracking (no Jira needed for solo project)
 
-## Current Phase: Phase 11 (Planning)
+## Current Phase: Phase 11 (In Progress)
 
-**Focus:** Infrastructure Modernization (Issue #20)
+**Focus:** Serverless Migration + Security (Issue #25)
 
-**Planned:**
-- Remote Terraform state (GCS backend)
-- Packer golden images for immutable infrastructure
-- Redis for rate limiting persistence
-- Automated dev database sync from production (#22)
+**Architecture Change:**
+```
+Current:  VM → docker-compose → (Flask + PostgreSQL containers)
+Future:   Cloud Run → (Flask container) → Cloud SQL
+```
+
+### Phase 11 Progress (December 16, 2025)
+
+**Completed:**
+- ✅ Google provider upgraded to ~> 6.0 (for ephemeral variables)
+- ✅ Terraform ephemeral variable pattern for DATABASE_URL (secret never in state)
+- ✅ entrypoint.sh updated to fetch DATABASE_URL from Secret Manager
+- ✅ docker-compose.dev.yml updated to remove local db service
+
+**Attempted (Neon) - ABANDONED:**
+- Tried Neon free tier PostgreSQL
+- Cross-cloud latency (GCP → AWS) was unacceptable (~10-20ms per query)
+- Empty search_path issue required workarounds
+- Decision: Use Cloud SQL instead (same GCP region, ~1-2ms latency)
+
+**Files Changed (need review):**
+- `terraform/environments/main.tf` - Added DATABASE_URL secret with ephemeral var
+- `terraform/environments/variables.tf` - Added database_url ephemeral variable
+- `entrypoint.sh` - Fetches DATABASE_URL directly (good, keep this)
+- `docker-compose.dev.yml` - Removed db service (good for Cloud SQL)
+- `app.py` - Added search_path event listener (CLEANUP: remove, Neon-specific)
+- `debug_neon.py` - Debug script (CLEANUP: delete)
+
+**Next Steps:**
+1. Add Cloud SQL to Terraform (dev + prod instances)
+2. Clean up Neon-specific code (app.py search_path listener, debug_neon.py)
+3. Test dev environment with Cloud SQL
+4. Migrate data to Cloud SQL
+5. Cut over production
+6. Then: Cloud Run migration
+
+**Note:** Packer golden images (#7) no longer needed with serverless approach.
 
 ## Previous Phase: Phase 10 (Complete ✅)
 
@@ -201,15 +233,24 @@ docker-compose -f docker-compose.prod.yml exec web python <migration_script>.py
 
 ## Known Issues & Technical Debt
 
-**GitHub Issues:**
+**GitHub Issues (Active Backlog):**
 - #1: Production-ready authentication (password reset, 2FA, session management)
-- #2: Replace Flask dev server with production WSGI (Gunicorn/Cloud Run)
-- #4: Remove database-to-dict conversion in templates (optimization)
+- #18: Add Redis backend for rate limiting
+- #20: Public registration with enhanced authentication
+- #22: Automated dev database sync from production
+- #23: CI/CD auto-tag incorrectly uses -alpha instead of -beta (bug)
+- #24: Security patching strategy for frontend dependencies
+- #26: Kubernetes/Helm deployment package (learning project, low priority)
 
-**Future Roadmap Items:**
-- Create REST API
-- Build custom MCP server for the API (learning exercise)
-- Recommendation engine
+**Completed/Obsolete:**
+- #2: Replace Flask dev server ✅ (done in Phase 9 - Gunicorn)
+- #4: Remove dict conversion ✅ (done in Phase 8)
+- #7: Packer golden images (obsolete - serverless pivot)
+
+**Future Roadmap:**
+- #27: REST API + MCP Server
+- #28: Recommendation engine
+- #29: Observability (metrics, logs, traces)
 
 ## Important Context
 
