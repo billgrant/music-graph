@@ -1,6 +1,6 @@
 # Music Graph Project - Claude Context
 
-**Last Updated:** December 17, 2025 (Phase 11 In Progress - Cloud SQL Complete)
+**Last Updated:** December 18, 2025 (Phase 11 In Progress - Dev CI/CD Complete)
 
 ## Project Overview
 
@@ -38,9 +38,9 @@ Music Graph is a Flask web application that visualizes music genre hierarchies a
 - [x] Move database to managed service (Cloud SQL) ✅ COMPLETE
 - [x] Update example env files for Secret Manager
 - [x] Document Cloud SQL backup/restore strategy
-- [ ] Deploy Flask app to Cloud Run
-- [ ] Update Terraform for Cloud Run architecture
-- [ ] Update CI/CD pipeline for Cloud Run deployments
+- [x] Deploy Flask app to Cloud Run ✅ DEV COMPLETE (prod pending)
+- [x] Update Terraform for Cloud Run architecture ✅ DEV COMPLETE
+- [x] Update CI/CD pipeline for Cloud Run deployments ✅ DEV COMPLETE (prod pending)
 - [ ] Decommission current Compute Engine VMs
 - [ ] Fix vis.js CVE (#24 - incorporated)
 - [ ] Evaluate container base image
@@ -67,7 +67,7 @@ Future:   Cloud Run → (Flask container) → Cloud SQL
 - ✅ Cleaned up Neon-specific code (app.py search_path listener, debug_neon.py)
 - ✅ Dev environment verified working - **fast** (GCP VM → GCP Cloud SQL, same region)
 
-**Completed (Day 2 - December 17, 2025):**
+**Completed (Day 2 - December 17, 2025 - Cloud SQL):**
 - ✅ Cloud SQL prod instance provisioned
 - ✅ Data migrated from prod PostgreSQL container to Cloud SQL prod
 - ✅ docker-compose files updated: `network_mode: host` for GCP metadata server access
@@ -76,6 +76,27 @@ Future:   Cloud Run → (Flask container) → Cloud SQL
 - ✅ Removed obsolete backup scripts (`backup-database.sh`, `verify-backup-setup.sh`)
 - ✅ Updated example env files (removed DATABASE_URL/POSTGRES_PASSWORD - now from Secret Manager)
 - ✅ Documented Cloud SQL backup/restore strategy
+
+**Completed (Day 2 - December 17, 2025 - Cloud Run Dev):**
+- ✅ Cloud Run API enabled in `terraform/project/main.tf`
+- ✅ Cloud Run service deployed for dev: `music-graph-dev`
+- ✅ Dedicated service account: `music-graph-dev@music-graph-479719.iam.gserviceaccount.com`
+- ✅ Cloud SQL Unix socket connection working (required `postgresql+psycopg2://` driver)
+- ✅ Separate DATABASE_URL secret for Cloud Run: `music-graph-dev-database-url-cloudrun`
+- ✅ Route53 DNS imported to Terraform (addresses Issue #11)
+- ✅ DNS switched from VM (A record) to Cloud Run (CNAME → ghs.googlehosted.com)
+- ✅ Domain mapping created for `dev.music-graph.billgrant.io`
+- ✅ `entrypoint.sh` updated to skip secret fetch when secrets already injected (Cloud Run)
+- ✅ `use_cloud_run` variable added for easy rollback (flip to `false` to route back to VM)
+
+**Completed (Day 3 - December 18, 2025 - CI/CD for Dev):**
+- ✅ SSL certificate verified working for `dev.music-graph.billgrant.io`
+- ✅ `deploy-dev.yml` updated: replaced SSH deployment with `gcloud run deploy`
+- ✅ Added `roles/run.developer` to GitHub Actions service account (project-level)
+- ✅ Added `roles/iam.serviceAccountUser` on Cloud Run SA for GitHub Actions (allows deploy as that SA)
+- ✅ Fixed `entrypoint.sh` - must be committed for CI/CD to build correct image
+- ✅ Pipeline tested and working end-to-end
+- 🔗 Dev site live at: `https://dev.music-graph.billgrant.io`
 
 **Attempted (Neon) - ABANDONED:**
 - Tried Neon free tier PostgreSQL
@@ -88,6 +109,21 @@ Future:   Cloud Run → (Flask container) → Cloud SQL
 - Container image needs `curl` to call Secret Manager API
 - Cloud SQL ENTERPRISE edition required for smaller tiers (db-g1-small)
 
+**Cloud Run Key Learnings:**
+- Cloud Run injects secrets directly as env vars - no need to fetch from metadata server
+- DATABASE_URL for Cloud SQL Unix socket requires `postgresql+psycopg2://` driver prefix
+- Unix socket format: `postgresql+psycopg2://user:pass@/dbname?host=/cloudsql/PROJECT:REGION:INSTANCE`
+- Cloud Run domain mapping requires domain verification in Google Search Console (same account as GCP project owner)
+- Cloud Run has `deletion_protection = true` by default - set to `false` for dev environments
+- Domain mapping SSL certificate takes 5-15 minutes to provision after DNS is configured
+
+**GitHub Actions Key Learnings:**
+- Currently using static service account key (`GCP_SA_KEY` secret) - works but not ideal
+- Better approach: Workload Identity Federation (WIF) - GitHub OIDC tokens exchanged for short-lived GCP creds
+- WIF eliminates static secrets entirely, credentials scoped by repo/branch (see Issue #31)
+- Each GitHub Actions job is isolated (separate runner) - must re-authenticate per job
+- The `google-github-actions/auth` warning about empty workspace is harmless when not checking out code
+
 **Architecture Notes:**
 - Cloud SQL handles backups automatically (enabled for prod, 7-day retention, point-in-time recovery)
 - No more local PostgreSQL container to manage
@@ -95,11 +131,33 @@ Future:   Cloud Run → (Flask container) → Cloud SQL
 - Secret Manager secrets constructed by Terraform from Cloud SQL outputs
 
 **Next Steps (Cloud Run Migration):**
-1. Deploy Flask app to Cloud Run
-2. Update Terraform for Cloud Run architecture
-3. Update CI/CD for Cloud Run deployments
-4. Decommission Compute Engine VMs
-5. Address vis.js CVE (#24)
+1. ✅ Deploy Flask app to Cloud Run (DEV COMPLETE)
+2. ✅ Update Terraform for Cloud Run architecture (DEV COMPLETE)
+3. ✅ Verify SSL certificate provisioned, test `https://dev.music-graph.billgrant.io`
+4. ✅ Update CI/CD for Cloud Run deployments (`deploy-dev.yml` - replace SSH with `gcloud run deploy`)
+5. **NEXT:** Deploy Cloud Run for PROD (apply Terraform with `use_cloud_run=true` in prod.tfvars)
+6. **NEXT:** Update `deploy-prod.yml` for Cloud Run (same pattern as dev)
+7. **NEXT:** Verify `docker-compose.yml` works for local development (matches Cloud Run behavior)
+8. Decommission Compute Engine VMs (remove VM resources from Terraform)
+9. Address vis.js CVE (#24) and container hardening - evaluate Docker Hardened Images (newly free, see Issue #24 comment)
+
+**Key Terraform Files Changed:**
+- `terraform/project/main.tf` - Added Cloud Run API, GitHub Actions `roles/run.developer` IAM
+- `terraform/environments/main.tf` - Added Cloud Run service, service account, IAM, domain mapping, Route53 record, GitHub Actions `serviceAccountUser` IAM
+- `terraform/environments/variables.tf` - Added `use_cloud_run` variable
+- `terraform/environments/outputs.tf` - Added Cloud Run outputs
+- `terraform/environments/dev.tfvars` - Added `use_cloud_run = true`
+
+**Key App Files Changed:**
+- `entrypoint.sh` - Skip secret fetch if already set (Cloud Run injects secrets)
+
+**Rollback to VM (if needed):**
+```bash
+# In terraform/environments/dev.tfvars, change:
+use_cloud_run = false
+# Then: terraform apply -var-file=dev.tfvars
+# This switches DNS back to VM A record
+```
 
 **Note:** Packer golden images (#7) no longer needed with serverless approach.
 
@@ -290,7 +348,7 @@ docker-compose -f docker-compose.prod.yml exec web python <migration_script>.py
 - #28: Recommendation engine
 - #29: Observability (metrics, logs, traces)
 - #30: Troubleshooting toolkit container
-- #31: Database credential management (rotation, dynamic secrets, or passwordless)
+- #31: Credential management - eliminate static secrets (GHA Workload Identity Federation, database IAM auth)
 
 ## Important Context
 

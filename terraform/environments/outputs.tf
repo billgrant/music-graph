@@ -36,3 +36,19 @@ output "cloud_sql_connection_name" {
   description = "Cloud SQL connection name (for Cloud SQL Proxy)"
   value       = google_sql_database_instance.music_graph.connection_name
 }
+
+# Cloud Run outputs
+output "cloud_run_url" {
+  description = "Cloud Run service URL"
+  value       = google_cloud_run_v2_service.music_graph.uri
+}
+
+output "cloud_run_service_name" {
+  description = "Cloud Run service name"
+  value       = google_cloud_run_v2_service.music_graph.name
+}
+
+output "domain_mapping_status" {
+  description = "Cloud Run domain mapping resource records (for DNS verification)"
+  value       = google_cloud_run_domain_mapping.music_graph.status
+}

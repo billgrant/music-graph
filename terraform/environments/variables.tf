@@ -53,3 +53,9 @@ variable "allowed_ssh_ips" {
   description = "List of allowed IP addresses for SSH access"
   type        = list(string)
 }
+
+variable "use_cloud_run" {
+  description = "Use Cloud Run (true) or VM (false) for DNS routing"
+  type        = bool
+  default     = false
+}

@@ -30,6 +30,12 @@ resource "google_project_service" "sqladmin" {
   disable_on_destroy = false
 }
 
+# Enable Cloud Run API
+resource "google_project_service" "cloudrun" {
+  service            = "run.googleapis.com"
+  disable_on_destroy = false
+}
+
 # Import existing GCR repository into Terraform state
 import {
   to = google_artifact_registry_repository.music_graph
@@ -150,6 +156,13 @@ resource "aws_iam_user_policy_attachment" "certbot_route53" {
 
 resource "aws_iam_access_key" "certbot" {
   user = aws_iam_user.certbot.name
+}
+
+# IAM: Allow GitHub Actions service account to deploy to Cloud Run
+resource "google_project_iam_member" "github_actions_cloud_run" {
+  project = var.project_id
+  role    = "roles/run.developer"
+  member  = "serviceAccount:github-actions-music-graph@${var.project_id}.iam.gserviceaccount.com"
 }
 
 # Outputs for certbot AWS credentials
