@@ -2,8 +2,10 @@
 set -e
 
 # =============================================================================
-# Fetch secrets from GCP Secret Manager (if running in GCP)
-# Uses metadata server for auth - no gcloud CLI needed
+# Fetch secrets from GCP Secret Manager (if needed)
+# - Cloud Run: Secrets are pre-injected as environment variables
+# - VMs: Fetch from Secret Manager via metadata server
+# - Local: Use environment variables from docker-compose
 # =============================================================================
 
 fetch_gcp_secret() {
@@ -19,9 +21,12 @@ fetch_gcp_secret() {
     echo "$response" | python3 -c "import sys,json,base64; print(base64.b64decode(json.load(sys.stdin)['payload']['data']).decode())"
 }
 
-# Check if running in GCP by testing metadata server
-if curl -s -f -m 2 "http://metadata.google.internal/computeMetadata/v1/" -H "Metadata-Flavor: Google" > /dev/null 2>&1; then
-    echo "Running in GCP - fetching secrets from Secret Manager..."
+# Check if secrets are already set (Cloud Run injects them)
+if [ -n "$SECRET_KEY" ] && [ -n "$DATABASE_URL" ]; then
+    echo "Secrets already set (Cloud Run or local dev) - skipping fetch"
+# Check if running in GCP by testing metadata server (VMs)
+elif curl -s -f -m 2 "http://metadata.google.internal/computeMetadata/v1/" -H "Metadata-Flavor: Google" > /dev/null 2>&1; then
+    echo "Running in GCP VM - fetching secrets from Secret Manager..."
 
     # Get project ID from metadata
     PROJECT_ID=$(curl -s "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google")
@@ -48,15 +53,16 @@ fi
 # =============================================================================
 
 echo "Waiting for PostgreSQL..."
+echo "DATABASE_URL format: $(echo $DATABASE_URL | sed 's/:.*@/:***@/')"  # Mask password
 until python3 -c "
 from sqlalchemy import create_engine, text
 import os
 engine = create_engine(os.environ['DATABASE_URL'])
 with engine.connect() as conn:
     conn.execute(text('SELECT 1'))
-" 2>/dev/null; do
+"; do
   echo "Waiting for database connection..."
-  sleep 1
+  sleep 2
 done
 
 echo "PostgreSQL ready!"
