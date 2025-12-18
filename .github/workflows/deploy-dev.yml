@@ -73,41 +73,21 @@ jobs:
     needs: [build-and-push]
 
     steps:
-    - name: Deploy to dev VM
-      uses: appleboy/ssh-action@v1.0.0
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
       with:
-        host: ${{ secrets.DEV_HOST }}
-        username: ${{ secrets.DEV_USER }}
-        key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
-        script: |
-          cd ~/music-graph
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-          # Pull latest code and configs
-          git pull origin main
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
 
-          # Authenticate gcloud using the VM's service account from metadata service
-          SA_EMAIL=$(curl -s -H "Metadata-Flavor: Google" \
-            http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/email)
-          gcloud config set account "$SA_EMAIL"
+    - name: Deploy to Cloud Run
+      run: |
+        gcloud run deploy music-graph-dev \
+          --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph:dev-${{ github.sha }} \
+          --region us-east1 \
+          --quiet
 
-          # Configure Docker to use gcloud for GCR authentication
-          gcloud auth configure-docker gcr.io --quiet
-
-          # Clean up old Docker images to prevent disk space issues
-          docker image prune -a -f --filter "until=48h"
-
-          # Pull the new dev image
-          docker pull gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph:dev-latest
-
-          # Stop and remove old containers to ensure clean state
-          docker-compose -f docker-compose.dev.yml down
-
-          # Start with new image
-          docker-compose -f docker-compose.dev.yml up -d
-
-          # Show deployment info
-          echo "=== Deployment Complete ==="
-          echo "Deployed commit: ${{ github.sha }}"
-          echo "Deployed by: ${{ github.actor }}"
-          echo ""
-          docker-compose -f docker-compose.dev.yml ps
+        echo "=== Deployment Complete ==="
+        echo "Deployed commit: ${{ github.sha }}"
+        echo "Deployed by: ${{ github.actor }}"
