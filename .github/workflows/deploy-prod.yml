@@ -137,114 +137,41 @@ jobs:
     needs: [build-and-push, get-version]
 
     steps:
-    - name: Pre-deployment backup
-      uses: appleboy/ssh-action@v1.0.0
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
       with:
-        host: ${{ secrets.PROD_HOST }}
-        username: ${{ secrets.PROD_USER }}
-        key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
-        script: |
-          echo "=== Creating pre-deployment backup ==="
-          cd ~/music-graph
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-          # Create backup directory if it doesn't exist
-          mkdir -p ~/backups
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
 
-          # Create timestamped backup
-          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-          BACKUP_FILE=~/backups/musicgraph-${TIMESTAMP}.sql
+    - name: Deploy to Cloud Run
+      run: |
+        VERSION="${{ needs.get-version.outputs.version }}"
 
-          docker-compose -f docker-compose.prod.yml exec -T db pg_dump -U musicgraph musicgraph > "$BACKUP_FILE"
+        gcloud run deploy music-graph-prod \
+          --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph:${VERSION} \
+          --region us-east1 \
+          --quiet
 
-          echo "✅ Database backup created: $BACKUP_FILE"
-          ls -lh "$BACKUP_FILE"
-
-    - name: Deploy to production VM
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.PROD_HOST }}
-        username: ${{ secrets.PROD_USER }}
-        key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
-        script: |
-          cd ~/music-graph
-
-          echo "=== Pulling latest code and configs ==="
-          git pull origin main
-
-          echo ""
-          echo "=== MANUAL MIGRATION REQUIRED ==="
-          echo "Before deployment completes, you must run migrations manually:"
-          echo "  1. SSH to production VM"
-          echo "  2. Run: cd ~/music-graph && docker-compose -f docker-compose.prod.yml exec web flask db upgrade"
-          echo "  3. Verify migrations succeeded"
-          echo ""
-          echo "For now, continuing with deployment..."
-          echo "TODO: Automate this in Issue #9"
-          echo ""
-
-          # Authenticate gcloud using the VM's service account from metadata service
-          SA_EMAIL=$(curl -s -H "Metadata-Flavor: Google" \
-            http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/email)
-          gcloud config set account "$SA_EMAIL"
-
-          # Configure Docker to use gcloud for GCR authentication
-          gcloud auth configure-docker gcr.io --quiet
-
-          # Clean up old Docker images to prevent disk space issues
-          docker image prune -a -f --filter "until=48h"
-
-          # Pull the new production image
-          VERSION="${{ needs.get-version.outputs.version }}"
-          docker pull gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph:${VERSION}
-
-          # Tag it as production locally for docker-compose
-          docker tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph:${VERSION} \
-                     gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph:production
-
-          # Stop and remove old containers to ensure clean state
-          docker-compose -f docker-compose.prod.yml down
-
-          # Start with new image
-          docker-compose -f docker-compose.prod.yml up -d
-
-          # Wait for services to be healthy
-          echo ""
-          echo "=== Waiting for services to start ==="
-          sleep 10
-
-          # Show deployment info
-          echo ""
-          echo "=== Deployment Complete ==="
-          echo "Deployed version: ${VERSION}"
-          echo "Deployed commit: ${{ github.sha }}"
-          echo "Deployed by: ${{ github.actor }}"
-          echo ""
-          docker-compose -f docker-compose.prod.yml ps
+        echo "=== Deployment Complete ==="
+        echo "Deployed version: ${VERSION}"
+        echo "Deployed commit: ${{ github.sha }}"
+        echo "Deployed by: ${{ github.actor }}"
 
     - name: Health check
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.PROD_HOST }}
-        username: ${{ secrets.PROD_USER }}
-        key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
-        script: |
-          echo "=== Running health checks ==="
+      run: |
+        echo "=== Running health check ==="
+        # Wait for deployment to stabilize
+        sleep 10
 
-          # Check if containers are running
-          if ! docker-compose -f ~/music-graph/docker-compose.prod.yml ps | grep -q "Up"; then
-            echo "❌ Containers are not running!"
-            exit 1
-          fi
-
-          # Check if web app is responding (may need to adjust URL)
-          if ! curl -f -s -o /dev/null http://localhost:5000/; then
-            echo "⚠️  Warning: Web app not responding on port 5000"
-            echo "This may be normal if nginx is the only entry point"
-          else
-            echo "✅ Web app is responding"
-          fi
-
-          echo "✅ Health checks passed"
+        # Check if site is responding
+        if curl -f -s -o /dev/null https://music-graph.billgrant.io/; then
+          echo "✅ Production site is responding"
+        else
+          echo "❌ Production site health check failed"
+          exit 1
+        fi
 
   create-release:
     runs-on: ubuntu-latest
