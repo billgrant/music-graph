@@ -1,6 +1,6 @@
 # Music Graph Project - Claude Context
 
-**Last Updated:** December 18, 2025 (Phase 11 In Progress - Dev CI/CD Complete)
+**Last Updated:** December 18, 2025 (Phase 11 In Progress - VMs Decommissioned)
 
 ## Project Overview
 
@@ -23,7 +23,7 @@ Music Graph is a Flask web application that visualizes music genre hierarchies a
 - Cloud SQL PostgreSQL (production/dev) / SQLite (local)
 - Docker + docker-compose
 - GCP Secret Manager for credentials
-- Deployed on Google Cloud Platform (Compute Engine → Cloud Run planned)
+- Deployed on Google Cloud Platform (Cloud Run + Cloud SQL)
 - Terraform for infrastructure (with workspaces)
 - GitHub Actions for CI/CD
 - GitHub for version control
@@ -38,10 +38,10 @@ Music Graph is a Flask web application that visualizes music genre hierarchies a
 - [x] Move database to managed service (Cloud SQL) ✅ COMPLETE
 - [x] Update example env files for Secret Manager
 - [x] Document Cloud SQL backup/restore strategy
-- [x] Deploy Flask app to Cloud Run ✅ DEV COMPLETE (prod pending)
-- [x] Update Terraform for Cloud Run architecture ✅ DEV COMPLETE
-- [x] Update CI/CD pipeline for Cloud Run deployments ✅ DEV COMPLETE (prod pending)
-- [ ] Decommission current Compute Engine VMs
+- [x] Deploy Flask app to Cloud Run ✅ COMPLETE (dev & prod)
+- [x] Update Terraform for Cloud Run architecture ✅ COMPLETE (dev & prod)
+- [x] Update CI/CD pipeline for Cloud Run deployments ✅ COMPLETE (dev & prod)
+- [x] Decommission current Compute Engine VMs ✅ COMPLETE
 - [ ] Fix vis.js CVE (#24 - incorporated)
 - [ ] Evaluate container base image
 - [ ] Add container image scanning to CI/CD
@@ -98,6 +98,42 @@ Future:   Cloud Run → (Flask container) → Cloud SQL
 - ✅ Pipeline tested and working end-to-end
 - 🔗 Dev site live at: `https://dev.music-graph.billgrant.io`
 
+**Completed (Day 3 - December 18, 2025 - Cloud Run Prod & CI/CD):**
+- ✅ Cloud Run prod deployed via Terraform (`use_cloud_run = true` in prod.tfvars)
+- ✅ Domain mapping created for `music-graph.billgrant.io`
+- ✅ SSL certificate provisioned and verified working
+- ✅ `deploy-prod.yml` updated: replaced SSH deployment with `gcloud run deploy`
+- ✅ Removed ~100 lines of SSH/VM deployment code from deploy-prod.yml
+- ✅ IAM already configured from dev work (project-level `roles/run.developer`)
+- ✅ Pipeline tested end-to-end via manual workflow dispatch
+- ✅ Health check passing against custom domain
+- 🔗 Prod site live at: `https://music-graph.billgrant.io`
+
+**Completed (Day 3 - December 18, 2025 - VM Decommissioning):**
+- ✅ Local development documentation created (`docs/local-development.md`)
+- ✅ README updated with Quick Start and link to local dev docs
+- ✅ Verified `docker compose` local development works
+- ✅ Removed all Compute Engine VM resources from Terraform:
+  - `google_compute_instance.music_graph`
+  - `google_compute_address.music_graph_ip`
+  - `google_compute_firewall.http`, `.https`, `.ssh`
+  - VM service account IAM bindings
+  - `database_url` secret (TCP version for VMs)
+- ✅ Removed obsolete variables: `machine_type`, `disk_size_gb`, `ssh_user`, `ssh_public_key_path`, `allowed_web_ips`, `allowed_ssh_ips`, `use_cloud_run`
+- ✅ Added `admin_ips` variable for Cloud SQL access (local dev/debugging)
+- ✅ Simplified Route53 to always use CNAME (no more A record for VM)
+- ✅ Deleted `startup-script.sh` (no longer needed)
+- ✅ Terraform apply successful - 10 resources destroyed
+- 🎉 **Legacy VM infrastructure fully decommissioned!**
+
+**Troubleshooting Notes (Prod Deployment):**
+- Initial Terraform apply failed - container didn't start (PORT 5000 timeout)
+- Root cause: GCR `production` tag had old entrypoint.sh without Cloud Run secret handling
+- Fix: Tagged `dev-latest` as `production` and pushed to GCR
+- Terraform taint issue: Resource was tainted but `deletion_protection=true` blocked destroy
+- Fix: `terraform untaint google_cloud_run_v2_service.music_graph` then apply
+- Lesson: Image tags don't automatically trigger new Cloud Run revisions - need explicit deploy
+
 **Attempted (Neon) - ABANDONED:**
 - Tried Neon free tier PostgreSQL
 - Cross-cloud latency (GCP → AWS) was unacceptable (~10-20ms per query)
@@ -131,35 +167,29 @@ Future:   Cloud Run → (Flask container) → Cloud SQL
 - Secret Manager secrets constructed by Terraform from Cloud SQL outputs
 
 **Next Steps (Cloud Run Migration):**
-1. ✅ Deploy Flask app to Cloud Run (DEV COMPLETE)
-2. ✅ Update Terraform for Cloud Run architecture (DEV COMPLETE)
-3. ✅ Verify SSL certificate provisioned, test `https://dev.music-graph.billgrant.io`
-4. ✅ Update CI/CD for Cloud Run deployments (`deploy-dev.yml` - replace SSH with `gcloud run deploy`)
-5. **NEXT:** Deploy Cloud Run for PROD (apply Terraform with `use_cloud_run=true` in prod.tfvars)
-6. **NEXT:** Update `deploy-prod.yml` for Cloud Run (same pattern as dev)
-7. **NEXT:** Verify `docker-compose.yml` works for local development (matches Cloud Run behavior)
-8. Decommission Compute Engine VMs (remove VM resources from Terraform)
-9. Address vis.js CVE (#24) and container hardening - evaluate Docker Hardened Images (newly free, see Issue #24 comment)
+1. ✅ Deploy Flask app to Cloud Run (COMPLETE - dev & prod)
+2. ✅ Update Terraform for Cloud Run architecture (COMPLETE - dev & prod)
+3. ✅ Verify SSL certificate provisioned (COMPLETE - both domains working)
+4. ✅ Update CI/CD for Cloud Run deployments (COMPLETE - both pipelines working)
+5. ✅ Deploy Cloud Run for PROD (COMPLETE)
+6. ✅ Update `deploy-prod.yml` for Cloud Run (COMPLETE)
+7. ✅ Verify local development works (COMPLETE - documented in `docs/local-development.md`)
+8. ✅ Decommission Compute Engine VMs (COMPLETE - all VM resources removed from Terraform)
+9. **NEXT:** Address vis.js CVE (#24) and container hardening - evaluate Docker Hardened Images (newly free, see Issue #24 comment)
 
 **Key Terraform Files Changed:**
 - `terraform/project/main.tf` - Added Cloud Run API, GitHub Actions `roles/run.developer` IAM
-- `terraform/environments/main.tf` - Added Cloud Run service, service account, IAM, domain mapping, Route53 record, GitHub Actions `serviceAccountUser` IAM
-- `terraform/environments/variables.tf` - Added `use_cloud_run` variable
-- `terraform/environments/outputs.tf` - Added Cloud Run outputs
-- `terraform/environments/dev.tfvars` - Added `use_cloud_run = true`
+- `terraform/environments/main.tf` - Cloud Run service, service account, IAM, domain mapping; Removed VM resources, firewalls, VM secrets
+- `terraform/environments/variables.tf` - Simplified to core vars + `admin_ips`; Removed VM-related vars and `use_cloud_run`
+- `terraform/environments/outputs.tf` - Cloud Run outputs only; Removed VM outputs
+- `terraform/environments/dev.tfvars` - Simplified (project_id, region, zone, environment, admin_ips)
+- `terraform/environments/prod.tfvars` - Simplified (same structure as dev)
+- `terraform/environments/startup-script.sh` - DELETED (no longer needed)
 
 **Key App Files Changed:**
 - `entrypoint.sh` - Skip secret fetch if already set (Cloud Run injects secrets)
 
-**Rollback to VM (if needed):**
-```bash
-# In terraform/environments/dev.tfvars, change:
-use_cloud_run = false
-# Then: terraform apply -var-file=dev.tfvars
-# This switches DNS back to VM A record
-```
-
-**Note:** Packer golden images (#7) no longer needed with serverless approach.
+**Note:** Packer golden images (#7) no longer needed with serverless approach. VMs have been fully decommissioned.
 
 ## Previous Phase: Phase 10 (Complete ✅)
 
@@ -304,28 +334,30 @@ Both Bands and Genres use "primary + all" pattern:
 ## Deployment Process
 
 **Local Development:**
+See [docs/local-development.md](docs/local-development.md) for detailed setup instructions.
+
+Quick start:
 ```bash
 source .venv/bin/activate
+python init_db.py  # First time only
 python app.py
 # Visit http://localhost:5000
 ```
 
-**Production Deployment:**
+**Production Deployment (Automated via CI/CD):**
+- Push to `main` branch → deploys to dev Cloud Run
+- Create release tag `v*` → deploys to prod Cloud Run
+
+Manual deployment (if needed):
 ```bash
-# SSH to GCP VM
-gcloud compute ssh prod-music-graph --zone=us-east1-b
-
-# Pull latest code
-cd music-graph
-git pull origin main
-
-# Rebuild containers
-docker-compose -f docker-compose.prod.yml down
-docker-compose -f docker-compose.prod.yml up -d --build
-
-# For database changes, run migrations inside container:
-docker-compose -f docker-compose.prod.yml exec web python <migration_script>.py
+gcloud run deploy music-graph-prod \
+  --image gcr.io/music-graph-479719/music-graph:production \
+  --region us-east1 \
+  --project music-graph-479719
 ```
+
+**Database Migrations:**
+Connect to Cloud SQL and run migrations directly, or use Cloud Run jobs.
 
 ## Known Issues & Technical Debt
 

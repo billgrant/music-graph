@@ -254,47 +254,37 @@ Phase 4 successfully added authentication and authorization:
 
 ## Getting Started
 
-### Prerequisites
-- Python 3.12+
-- uv (package manager)
+### Quick Start (Python)
 
-### Local Development Setup
-
-1. Clone the repository:
 ```bash
 git clone https://github.com/billgrant/music-graph.git
 cd music-graph
-```
-
-2. Create virtual environment and install dependencies:
-```bash
-uv venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-uv pip install flask flask-sqlalchemy
-```
-
-3. Initialize the database:
-```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 python init_db.py
-```
-
-This creates `music_graph.db`, loads initial data, and creates an admin user:
-- Username: `admin`
-- Password: `admin123`
-
-**Important:** Change the admin password after first login!
-
-You can create additional admin users with:
-```bash
-python make_admin.py <username>
-```
-
-4. Run the application:
-```bash
 python app.py
 ```
 
-5. Visit `http://localhost:5000` in your browser
+Visit http://localhost:5000 - Default admin: `admin` / `admin123`
+
+### Quick Start (Docker)
+
+```bash
+git clone https://github.com/billgrant/music-graph.git
+cd music-graph
+docker compose up -d --build
+docker compose exec web python init_db.py
+```
+
+Visit http://localhost:5000 - Default admin: `admin` / `admin123`
+
+### Full Documentation
+
+See [docs/local-development.md](docs/local-development.md) for detailed setup instructions, including:
+- Comparison of Python (SQLite) vs Docker (PostgreSQL) methods
+- Useful commands and troubleshooting
+- How the configuration works
 
 ---
 
