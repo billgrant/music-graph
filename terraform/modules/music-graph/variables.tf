@@ -14,7 +14,7 @@ variable "environment" {
 }
 
 variable "admin_ips" {
-  description = "List of admin IP addresses for Cloud SQL access"
+  description = "List of admin IP addresses for Cloud SQL access (set via TF_VAR_admin_ips for local debugging)"
   type        = list(string)
   default     = []
 }
