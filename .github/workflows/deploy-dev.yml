@@ -16,18 +16,45 @@ on:
       - 'templates/**'
       - 'static/**'
       - 'tests/**'
-      - '.github/workflows/**'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/deploy-dev.yml'
       - 'docker-compose.dev.yml'
+  workflow_run:
+    workflows: ["Terraform Apply"]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:  # Allows manual trigger from GitHub UI
 
 jobs:
+  # Skip if triggered by failed Terraform Apply
+  check-trigger:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - name: Check if should run
+        id: check
+        run: |
+          # If triggered by workflow_run, check if Terraform succeeded
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
+              echo "Terraform Apply failed, skipping deploy"
+              echo "should_run=false" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+          fi
+          echo "should_run=true" >> $GITHUB_OUTPUT
+
   # Run tests first - reuse existing CI workflow
   test:
+    needs: [check-trigger]
+    if: needs.check-trigger.outputs.should_run == 'true'
     uses: ./.github/workflows/ci.yml
 
   build-and-push:
     runs-on: ubuntu-latest
-    needs: [test]  # Only run if tests pass
+    needs: [check-trigger, test]
+    if: needs.check-trigger.outputs.should_run == 'true'
 
     steps:
     - name: Checkout code
@@ -70,7 +97,8 @@ jobs:
 
   deploy-to-dev:
     runs-on: ubuntu-latest
-    needs: [build-and-push]
+    needs: [check-trigger, build-and-push]
+    if: needs.check-trigger.outputs.should_run == 'true'
 
     steps:
     - name: Authenticate to Google Cloud

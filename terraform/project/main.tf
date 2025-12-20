@@ -36,6 +36,18 @@ resource "google_project_service" "cloudrun" {
   disable_on_destroy = false
 }
 
+# Enable Cloud Resource Manager API (needed for Terraform CI)
+resource "google_project_service" "cloudresourcemanager" {
+  service            = "cloudresourcemanager.googleapis.com"
+  disable_on_destroy = false
+}
+
+# Enable IAM API (needed for Terraform CI)
+resource "google_project_service" "iam" {
+  service            = "iam.googleapis.com"
+  disable_on_destroy = false
+}
+
 # Import existing GCR repository into Terraform state
 import {
   to = google_artifact_registry_repository.music_graph

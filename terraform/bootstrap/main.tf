@@ -166,6 +166,7 @@ resource "aws_iam_policy" "terraform_ci_route53" {
           "route53:ListHostedZones",
           "route53:GetHostedZone",
           "route53:ListResourceRecordSets",
+          "route53:ListTagsForResource",
           "route53:GetChange",
         ]
         Resource = "*"
