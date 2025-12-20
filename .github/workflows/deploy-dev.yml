@@ -26,23 +26,47 @@ on:
   workflow_dispatch:  # Allows manual trigger from GitHub UI
 
 jobs:
-  # Skip if triggered by failed Terraform Apply
+  # Check if we should run (skip if TF failed or no app changes)
   check-trigger:
     runs-on: ubuntu-latest
     outputs:
       should_run: ${{ steps.check.outputs.should_run }}
     steps:
+      - name: Checkout code
+        if: github.event_name == 'workflow_run'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
       - name: Check if should run
         id: check
         run: |
-          # If triggered by workflow_run, check if Terraform succeeded
+          # If triggered by workflow_run (after Terraform Apply)
           if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            # Check if Terraform succeeded
             if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
               echo "Terraform Apply failed, skipping deploy"
               echo "should_run=false" >> $GITHUB_OUTPUT
               exit 0
             fi
+
+            # Check if any app files changed in the commit that triggered Terraform
+            APP_PATTERNS="app.py|models.py|config.py|init_db.py|make_admin.py|migrate_.*\.py|entrypoint.sh|requirements.txt|Dockerfile|templates/|static/|tests/"
+
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
+
+            if echo "$CHANGED_FILES" | grep -qE "$APP_PATTERNS"; then
+              echo "App files changed, proceeding with deploy"
+              echo "should_run=true" >> $GITHUB_OUTPUT
+            else
+              echo "No app files changed, skipping deploy"
+              echo "Changed files: $CHANGED_FILES"
+              echo "should_run=false" >> $GITHUB_OUTPUT
+            fi
+            exit 0
           fi
+
+          # For push and workflow_dispatch, always run
           echo "should_run=true" >> $GITHUB_OUTPUT
 
   # Run tests first - reuse existing CI workflow
