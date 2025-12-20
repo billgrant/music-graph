@@ -1,71 +1,72 @@
 # Terraform - Environment Infrastructure
 
-This Terraform configuration manages **environment-specific GCP resources** using workspaces for dev and prod.
+Environment-specific infrastructure for dev and prod, managed via GitOps CI/CD.
 
-## What This Manages
+## Structure
 
-- Compute Engine VMs (dev-music-graph, prod-music-graph)
-- Static external IP addresses
-- Firewall rules
-- VM startup scripts
-- Service account attachments
-
-## Workspaces
-
-This configuration uses Terraform workspaces to manage separate environments:
-
-- `dev` - Development environment VM
-- `prod` - Production environment VM
-
-### View Current Workspace
-```bash
-terraform workspace show
+```
+terraform/
+├── bootstrap/       # State buckets, CI service accounts (manual apply only)
+├── project/         # Project-level: APIs, GCR, backup bucket, certbot IAM
+├── environments/
+│   ├── dev/         # Dev Cloud Run, Cloud SQL, DNS
+│   └── prod/        # Prod Cloud Run, Cloud SQL, DNS
+└── modules/
+    └── music-graph/ # Shared module for Cloud Run + Cloud SQL
 ```
 
-### List All Workspaces
+## CI/CD Workflows
+
+- **On PR**: `terraform-plan.yml` runs plan for project, dev, and prod; posts results as PR comments
+- **On merge to main**: `terraform-apply.yml` auto-applies project and dev
+- **Production**: Manual dispatch only via GitHub Actions
+
+## Local Development
+
+### Connecting to Cloud SQL
+
+To add your IP for direct database access:
+
 ```bash
-terraform workspace list
+# Get your public IP
+curl ifconfig.me
+
+# Set the environment variable and apply
+export TF_VAR_admin_ips='["YOUR_IP/32"]'
+cd terraform/environments/dev  # or prod
+terraform apply
 ```
 
-### Switch Workspace
-```bash
-terraform workspace select dev
-# or
-terraform workspace select prod
-```
+This adds your IP to the Cloud SQL authorized networks. The variable defaults to empty, so CI/CD won't add any admin IPs.
 
-## Usage
+### Running Terraform Locally
 
-### Initialize Terraform
 ```bash
-cd terraform/environments
+cd terraform/environments/dev
 terraform init
+terraform plan
+terraform apply
 ```
 
-### Select Environment
+## Bootstrap (Manual Only)
+
+The `terraform/bootstrap` directory creates foundational resources and is NOT managed by CI:
+- GCS state buckets
+- terraform-ci service account + keys
+- AWS IAM user for Route53
+
+If bootstrap needs changes, apply locally:
 ```bash
-terraform workspace select dev  # or prod
+cd terraform/bootstrap
+terraform apply
 ```
 
-### Review Changes
+## State Lock Issues
+
+If a CI run is cancelled mid-apply, you may need to force-unlock:
 ```bash
-terraform plan -var-file="dev.tfvars"  # or prod.tfvars
+cd terraform/project  # or environments/dev, etc.
+terraform force-unlock LOCK_ID
 ```
 
-### Apply Changes
-```bash
-terraform apply -var-file="dev.tfvars"  # or prod.tfvars
-```
-
-## Important Notes
-
-⚠️ **Always verify workspace before running terraform commands!**
-
-- `terraform workspace show` - Check current workspace
-- Wrong workspace = changes to wrong environment
-- Use `-var-file` flag to specify correct variables
-
-## Related
-
-- See `terraform/project/` for project-level resources (GCR lifecycle policy)
-- Part of Phase 5 (Production Deployment) and Phase 7 (CI/CD)
+The lock ID is shown in the error message.
