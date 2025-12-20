@@ -1,6 +1,6 @@
 # Music Graph Project - Claude Context
 
-**Last Updated:** December 18, 2025 (Phase 11 In Progress - VMs Decommissioned)
+**Last Updated:** December 20, 2025 (Phase 11 In Progress - GitOps CI/CD Complete)
 
 ## Project Overview
 
@@ -24,7 +24,7 @@ Music Graph is a Flask web application that visualizes music genre hierarchies a
 - Docker + docker-compose
 - GCP Secret Manager for credentials
 - Deployed on Google Cloud Platform (Cloud Run + Cloud SQL)
-- Terraform for infrastructure (with workspaces)
+- Terraform for infrastructure (GitOps: plan on PR, auto-apply on merge)
 - GitHub Actions for CI/CD
 - GitHub for version control
 - GitHub Issues for backlog/task tracking (no Jira needed for solo project)
@@ -126,6 +126,25 @@ Future:   Cloud Run → (Flask container) → Cloud SQL
 - ✅ Terraform apply successful - 10 resources destroyed
 - 🎉 **Legacy VM infrastructure fully decommissioned!**
 
+**Completed (Day 4 - December 20, 2025 - Terraform GitOps CI/CD):**
+- ✅ Restructured Terraform into module pattern:
+  - `terraform/modules/music-graph/` - Shared module for Cloud Run + Cloud SQL
+  - `terraform/environments/dev/` - Dev environment wrapper
+  - `terraform/environments/prod/` - Prod environment wrapper
+  - `terraform/project/` - Project-level resources (APIs, GCR, backup bucket, certbot IAM)
+  - `terraform/bootstrap/` - State buckets and CI service accounts (manual only)
+- ✅ Remote state in GCS buckets: `music-graph-479719-tf-{project,dev,prod}`
+- ✅ `terraform-plan.yml` - Runs plan on PRs for project, dev, and prod; posts results as PR comments
+- ✅ `terraform-apply.yml` - Auto-applies project and dev on merge to main; prod is manual dispatch only
+- ✅ Deploy workflow ordering: Terraform Apply completes first, then Deploy to Dev via `workflow_run` trigger
+- ✅ Merge commit detection fix: Deploy correctly skips when only terraform files changed
+- ✅ `admin_ips` variablized to use `TF_VAR_admin_ips` env var (not hardcoded in repo)
+- ✅ Added AWS IAM permissions for terraform-ci to manage certbot user/policy
+- ✅ Added Route53 `ListTagsForResource` permission
+- ✅ Enabled Cloud Resource Manager and IAM APIs in project terraform
+- ✅ Documentation updated: `terraform/environments/README.md`
+- 🎉 **Full GitOps workflow operational!**
+
 **Troubleshooting Notes (Prod Deployment):**
 - Initial Terraform apply failed - container didn't start (PORT 5000 timeout)
 - Root cause: GCR `production` tag had old entrypoint.sh without Cloud Run secret handling
@@ -175,16 +194,18 @@ Future:   Cloud Run → (Flask container) → Cloud SQL
 6. ✅ Update `deploy-prod.yml` for Cloud Run (COMPLETE)
 7. ✅ Verify local development works (COMPLETE - documented in `docs/local-development.md`)
 8. ✅ Decommission Compute Engine VMs (COMPLETE - all VM resources removed from Terraform)
-9. **NEXT:** Address vis.js CVE (#24) and container hardening - evaluate Docker Hardened Images (newly free, see Issue #24 comment)
+9. ✅ Terraform GitOps CI/CD (COMPLETE - plan on PR, auto-apply on merge)
+10. **NEXT:** Address vis.js CVE (#24) and container hardening - evaluate Docker Hardened Images (newly free, see Issue #24 comment)
 
 **Key Terraform Files Changed:**
-- `terraform/project/main.tf` - Added Cloud Run API, GitHub Actions `roles/run.developer` IAM
-- `terraform/environments/main.tf` - Cloud Run service, service account, IAM, domain mapping; Removed VM resources, firewalls, VM secrets
-- `terraform/environments/variables.tf` - Simplified to core vars + `admin_ips`; Removed VM-related vars and `use_cloud_run`
-- `terraform/environments/outputs.tf` - Cloud Run outputs only; Removed VM outputs
-- `terraform/environments/dev.tfvars` - Simplified (project_id, region, zone, environment, admin_ips)
-- `terraform/environments/prod.tfvars` - Simplified (same structure as dev)
-- `terraform/environments/startup-script.sh` - DELETED (no longer needed)
+- `terraform/modules/music-graph/` - NEW: Shared module with Cloud Run, Cloud SQL, DNS, secrets
+- `terraform/environments/dev/main.tf` - Thin wrapper calling module
+- `terraform/environments/prod/main.tf` - Thin wrapper calling module
+- `terraform/project/main.tf` - Added GCS backend, APIs, certbot IAM
+- `terraform/bootstrap/main.tf` - Added IAM policy for terraform-ci to manage certbot resources
+- `.github/workflows/terraform-plan.yml` - NEW: Plan on PR with PR comments
+- `.github/workflows/terraform-apply.yml` - NEW: Auto-apply project+dev, manual prod
+- `.github/workflows/deploy-dev.yml` - Added workflow_run trigger and merge commit detection
 
 **Key App Files Changed:**
 - `entrypoint.sh` - Skip secret fetch if already set (Cloud Run injects secrets)
