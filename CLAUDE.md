@@ -42,7 +42,7 @@ Music Graph is a Flask web application that visualizes music genre hierarchies a
 - [x] Update Terraform for Cloud Run architecture ✅ COMPLETE (dev & prod)
 - [x] Update CI/CD pipeline for Cloud Run deployments ✅ COMPLETE (dev & prod)
 - [x] Decommission current Compute Engine VMs ✅ COMPLETE
-- [ ] Fix vis.js CVE (#24 - incorporated)
+- [x] Fix vis.js CVE (#24 - investigated, no CVE found, version pinned)
 - [ ] Evaluate container base image
 - [ ] Add container image scanning to CI/CD
 - [ ] Update documentation
@@ -195,7 +195,8 @@ Future:   Cloud Run → (Flask container) → Cloud SQL
 7. ✅ Verify local development works (COMPLETE - documented in `docs/local-development.md`)
 8. ✅ Decommission Compute Engine VMs (COMPLETE - all VM resources removed from Terraform)
 9. ✅ Terraform GitOps CI/CD (COMPLETE - plan on PR, auto-apply on merge)
-10. **NEXT:** Address vis.js CVE (#24) and container hardening - evaluate Docker Hardened Images (newly free, see Issue #24 comment)
+10. ✅ vis.js CVE investigated - no CVE found, version pinned to 10.0.2
+11. **NEXT:** Container hardening - evaluate base image, add image scanning to CI/CD
 
 **Key Terraform Files Changed:**
 - `terraform/modules/music-graph/` - NEW: Shared module with Cloud Run, Cloud SQL, DNS, secrets
