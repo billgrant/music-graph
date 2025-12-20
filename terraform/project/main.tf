@@ -11,6 +11,11 @@ terraform {
       version = "~> 5.0"
     }
   }
+
+  backend "gcs" {
+    bucket = "music-graph-479719-tf-project"
+    prefix = "terraform/state"
+  }
 }
 
 provider "google" {
