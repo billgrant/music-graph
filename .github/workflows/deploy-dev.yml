@@ -36,7 +36,7 @@ jobs:
         if: github.event_name == 'workflow_run'
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0  # Full history needed for merge-base
 
       - name: Check if should run
         id: check
@@ -50,17 +50,31 @@ jobs:
               exit 0
             fi
 
-            # Check if any app files changed in the commit that triggered Terraform
-            APP_PATTERNS="app.py|models.py|config.py|init_db.py|make_admin.py|migrate_.*\.py|entrypoint.sh|requirements.txt|Dockerfile|templates/|static/|tests/"
+            # For merge commits, HEAD~1 only gets one parent
+            # Use merge-base to find common ancestor with main branch
+            # Then diff against that to see all changes in the merge
+            if git rev-parse HEAD^2 >/dev/null 2>&1; then
+              echo "Detected merge commit"
+              # This is a merge commit - get changes between merge-base and HEAD
+              MERGE_BASE=$(git merge-base HEAD^1 HEAD^2)
+              CHANGED_FILES=$(git diff --name-only $MERGE_BASE HEAD 2>/dev/null || echo "")
+            else
+              echo "Detected regular commit"
+              # Regular commit - use HEAD~1
+              CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
+            fi
 
-            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
+            echo "Changed files:"
+            echo "$CHANGED_FILES"
+
+            # Check if any app files changed
+            APP_PATTERNS="app.py|models.py|config.py|init_db.py|make_admin.py|migrate_.*\.py|entrypoint.sh|requirements.txt|Dockerfile|templates/|static/|tests/"
 
             if echo "$CHANGED_FILES" | grep -qE "$APP_PATTERNS"; then
               echo "App files changed, proceeding with deploy"
               echo "should_run=true" >> $GITHUB_OUTPUT
             else
               echo "No app files changed, skipping deploy"
-              echo "Changed files: $CHANGED_FILES"
               echo "should_run=false" >> $GITHUB_OUTPUT
             fi
             exit 0
