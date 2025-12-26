@@ -12,8 +12,8 @@ terraform {
     }
   }
 
+  # Backend bucket configured via -backend-config in CI
   backend "gcs" {
-    bucket = "music-graph-479719-tf-project"
     prefix = "terraform/state"
   }
 }
@@ -53,16 +53,11 @@ resource "google_project_service" "iam" {
   disable_on_destroy = false
 }
 
-# Import existing GCR repository into Terraform state
-import {
-  to = google_artifact_registry_repository.music_graph
-  id = "projects/music-graph-479719/locations/us/repositories/gcr.io"
-}
-
 # Configure cleanup policy for Google Container Registry (Artifact Registry)
 # GCR uses Artifact Registry as its backend
+# Note: GCR uses multi-region "us", not the regional us-east1
 resource "google_artifact_registry_repository" "music_graph" {
-  location      = var.region
+  location      = "us"
   repository_id = "gcr.io"
   description   = "Container registry for music-graph Docker images"
   format        = "DOCKER"

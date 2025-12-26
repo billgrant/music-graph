@@ -151,7 +151,7 @@ jobs:
 
         gcloud run deploy music-graph-prod \
           --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph:${VERSION} \
-          --region us-east1 \
+          --region ${{ vars.GCP_REGION }} \
           --quiet
 
         echo "=== Deployment Complete ==="
@@ -166,7 +166,7 @@ jobs:
         sleep 10
 
         # Check if site is responding
-        if curl -f -s -o /dev/null https://music-graph.billgrant.io/; then
+        if curl -f -s -o /dev/null https://${{ vars.APP_SUBDOMAIN }}.${{ vars.DOMAIN_BASE }}/; then
           echo "✅ Production site is responding"
         else
           echo "❌ Production site health check failed"

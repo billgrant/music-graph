@@ -1,9 +1,12 @@
 # Production Environment Variables
 # Copy this to prod.tfvars and fill in your actual values
 # NEVER commit prod.tfvars to git!
+#
+# In CI, these are provided via TF_VAR_* environment variables from GitHub repo variables.
+# For local development, create prod.tfvars with your values.
 
-project_id  = "your-gcp-project-id"
-region      = "us-east1"
-zone        = "us-east1-b"
-environment = "prod"
-admin_ips   = ["your.ip.address/32"]  # Your home/office IP for Cloud SQL access
+project_id    = "your-gcp-project-id"
+region        = "us-east1"
+domain_base   = "yourdomain.com"
+app_subdomain = "your-app"
+admin_ips     = ["your.ip.address/32"]  # Your home/office IP for Cloud SQL access

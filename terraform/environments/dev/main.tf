@@ -16,28 +16,54 @@ terraform {
     }
   }
 
+  # Backend bucket configured via -backend-config in CI
   backend "gcs" {
-    bucket = "music-graph-479719-tf-dev"
     prefix = "state"
   }
 }
 
 provider "google" {
-  project = "music-graph-479719"
-  region  = "us-east1"
+  project = var.project_id
+  region  = var.region
 }
 
 provider "aws" {
-  region = "us-east-1"
+  region = "us-east-1" # Route53 is global, region is just for provider
 }
 
 module "music_graph" {
   source = "../../modules/music-graph"
 
-  project_id  = "music-graph-479719"
-  region      = "us-east1"
-  environment = "dev"
-  admin_ips   = var.admin_ips
+  project_id    = var.project_id
+  region        = var.region
+  environment   = "dev"
+  admin_ips     = var.admin_ips
+  domain_base   = var.domain_base
+  app_subdomain = var.app_subdomain
+}
+
+# =============================================================================
+# Variables - provided via TF_VAR_* environment variables in CI
+# =============================================================================
+
+variable "project_id" {
+  description = "GCP project ID"
+  type        = string
+}
+
+variable "region" {
+  description = "GCP region"
+  type        = string
+}
+
+variable "domain_base" {
+  description = "Base domain (e.g., billgrant.io)"
+  type        = string
+}
+
+variable "app_subdomain" {
+  description = "Application subdomain prefix (e.g., music-graph)"
+  type        = string
 }
 
 variable "admin_ips" {

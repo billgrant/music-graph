@@ -19,6 +19,13 @@ jobs:
         environment: [dev, prod]
       fail-fast: false
 
+    env:
+      TF_VAR_project_id: ${{ vars.GCP_PROJECT_ID }}
+      TF_VAR_project_number: ${{ vars.GCP_PROJECT_NUMBER }}
+      TF_VAR_region: ${{ vars.GCP_REGION }}
+      TF_VAR_domain_base: ${{ vars.DOMAIN_BASE }}
+      TF_VAR_app_subdomain: ${{ vars.APP_SUBDOMAIN }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -42,7 +49,7 @@ jobs:
 
       - name: Terraform Init
         working-directory: terraform/environments/${{ matrix.environment }}
-        run: terraform init -no-color
+        run: terraform init -no-color -backend-config="bucket=${{ vars.GCP_PROJECT_ID }}-tf-${{ matrix.environment }}"
 
       - name: Terraform Plan
         id: plan
@@ -91,6 +98,11 @@ jobs:
     name: Plan (project)
     runs-on: ubuntu-latest
 
+    env:
+      TF_VAR_project_id: ${{ vars.GCP_PROJECT_ID }}
+      TF_VAR_project_number: ${{ vars.GCP_PROJECT_NUMBER }}
+      TF_VAR_region: ${{ vars.GCP_REGION }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -114,7 +126,7 @@ jobs:
 
       - name: Terraform Init
         working-directory: terraform/project
-        run: terraform init -no-color
+        run: terraform init -no-color -backend-config="bucket=${{ vars.GCP_PROJECT_ID }}-tf-project"
 
       - name: Terraform Plan
         id: plan
