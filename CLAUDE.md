@@ -389,13 +389,15 @@ Connect to Cloud SQL and run migrations directly, or use Cloud Run jobs.
 - #20: Public registration with enhanced authentication
 - #22: Automated dev database sync from production
 - #23: CI/CD auto-tag incorrectly uses -alpha instead of -beta (bug)
-- #24: Security patching strategy for frontend dependencies
 - #26: Kubernetes/Helm deployment package (learning project, low priority)
+- #34: Extract hardcoded identifiers to GitHub repo variables (portability/security)
 
 **Completed/Obsolete:**
 - #2: Replace Flask dev server ✅ (done in Phase 9 - Gunicorn)
 - #4: Remove dict conversion ✅ (done in Phase 8)
 - #7: Packer golden images (obsolete - serverless pivot)
+- #24: Security patching strategy ✅ (vis.js investigated, no CVE, version pinned to 10.0.2)
+- #32: Terraform Remote State + CI/CD ✅ (done in Phase 11 - GitOps)
 
 **Future Roadmap:**
 - #27: REST API + MCP Server

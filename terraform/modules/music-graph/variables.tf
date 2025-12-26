@@ -19,8 +19,12 @@ variable "admin_ips" {
   default     = []
 }
 
-variable "route53_zone_name" {
-  description = "Route53 hosted zone name"
+variable "domain_base" {
+  description = "Base domain (e.g., billgrant.io)"
   type        = string
-  default     = "billgrant.io."
+}
+
+variable "app_subdomain" {
+  description = "Application subdomain prefix (e.g., music-graph)"
+  type        = string
 }

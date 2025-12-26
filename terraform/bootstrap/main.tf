@@ -187,3 +187,60 @@ resource "aws_iam_user_policy_attachment" "terraform_ci_route53" {
   user       = aws_iam_user.terraform_ci.name
   policy_arn = aws_iam_policy.terraform_ci_route53.arn
 }
+
+# IAM policy for Terraform CI to manage certbot IAM resources in project terraform
+resource "aws_iam_policy" "terraform_ci_iam" {
+  name        = "terraform-ci-iam-music-graph"
+  description = "Allows Terraform CI to manage IAM users/policies for certbot"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "ManageCertbotUser"
+        Effect = "Allow"
+        Action = [
+          "iam:GetUser",
+          "iam:CreateUser",
+          "iam:DeleteUser",
+          "iam:TagUser",
+          "iam:UntagUser",
+          "iam:ListAccessKeys",
+          "iam:CreateAccessKey",
+          "iam:DeleteAccessKey",
+          "iam:GetAccessKeyLastUsed",
+        ]
+        Resource = "arn:aws:iam::365673647556:user/certbot-music-graph"
+      },
+      {
+        Sid    = "ManageCertbotPolicy"
+        Effect = "Allow"
+        Action = [
+          "iam:GetPolicy",
+          "iam:GetPolicyVersion",
+          "iam:CreatePolicy",
+          "iam:DeletePolicy",
+          "iam:CreatePolicyVersion",
+          "iam:DeletePolicyVersion",
+          "iam:ListPolicyVersions",
+        ]
+        Resource = "arn:aws:iam::365673647556:policy/certbot-route53-dns-music-graph"
+      },
+      {
+        Sid    = "ManagePolicyAttachment"
+        Effect = "Allow"
+        Action = [
+          "iam:AttachUserPolicy",
+          "iam:DetachUserPolicy",
+          "iam:ListAttachedUserPolicies",
+        ]
+        Resource = "arn:aws:iam::365673647556:user/certbot-music-graph"
+      },
+    ]
+  })
+}
+
+resource "aws_iam_user_policy_attachment" "terraform_ci_iam" {
+  user       = aws_iam_user.terraform_ci.name
+  policy_arn = aws_iam_policy.terraform_ci_iam.arn
+}

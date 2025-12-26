@@ -151,7 +151,7 @@ jobs:
       run: |
         gcloud run deploy music-graph-dev \
           --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/music-graph:dev-${{ github.sha }} \
-          --region us-east1 \
+          --region ${{ vars.GCP_REGION }} \
           --quiet
 
         echo "=== Deployment Complete ==="

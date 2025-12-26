@@ -3,7 +3,7 @@
 # =============================================================================
 
 data "aws_route53_zone" "billgrant" {
-  name = var.route53_zone_name
+  name = "${var.domain_base}."
 }
 
 # =============================================================================
@@ -265,7 +265,7 @@ resource "google_cloud_run_v2_service_iam_member" "public" {
 }
 
 resource "google_cloud_run_domain_mapping" "music_graph" {
-  name     = var.environment == "prod" ? "music-graph.billgrant.io" : "dev.music-graph.billgrant.io"
+  name     = var.environment == "prod" ? "${var.app_subdomain}.${var.domain_base}" : "dev.${var.app_subdomain}.${var.domain_base}"
   location = var.region
 
   metadata {
@@ -279,7 +279,7 @@ resource "google_cloud_run_domain_mapping" "music_graph" {
 
 resource "aws_route53_record" "music_graph" {
   zone_id = data.aws_route53_zone.billgrant.zone_id
-  name    = var.environment == "prod" ? "music-graph" : "dev.music-graph"
+  name    = var.environment == "prod" ? var.app_subdomain : "dev.${var.app_subdomain}"
   type    = "CNAME"
   ttl     = 300
   records = ["ghs.googlehosted.com"]
